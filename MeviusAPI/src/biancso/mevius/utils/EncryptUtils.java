@@ -78,7 +78,7 @@ public class EncryptUtils {
 					NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException {
 				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
 				cipher.init(Cipher.DECRYPT_MODE, privatekey);
-				return byteArrayToHex(cipher.doFinal(str.getBytes()));
+				return byteArrayToHex(cipher.doFinal(hexToByteArray(str)));
 			}
 		}
 

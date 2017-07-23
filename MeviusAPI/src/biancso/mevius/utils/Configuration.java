@@ -115,7 +115,7 @@ public class Configuration {
 	}
 
 	public KeyPair getKeyPair(String key) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		PKCS8EncodedKeySpec publicKeySpec = new PKCS8EncodedKeySpec(
+		X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(
 				Base64.getDecoder().decode(getString(key + "_PUBLIC")));
 		PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
 				Base64.getDecoder().decode(getString(key + "_PRIVATE")));
