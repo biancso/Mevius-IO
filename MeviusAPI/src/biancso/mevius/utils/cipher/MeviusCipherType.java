@@ -1,4 +1,4 @@
-package biancso.mevius.utils;
+package biancso.mevius.utils.cipher;
 
 public enum MeviusCipherType {
 	RSA("rsa"), AES256("aes256");

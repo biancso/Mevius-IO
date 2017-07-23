@@ -1,4 +1,4 @@
-package biancso.mevius.utils;
+package biancso.mevius.utils.cipher;
 
 public enum MeviusCipherAction {
 	ENCRYPT(0), DECRYPT(1);
