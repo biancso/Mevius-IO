@@ -8,7 +8,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Properties;
+
+import javax.net.ssl.X509KeyManager;
 
 public class Configuration {
 	private Properties prop = new Properties();
@@ -96,6 +105,22 @@ public class Configuration {
 		} catch (NumberFormatException e) {
 			return 0;
 		}
+	}
+
+	public void setKeyPair(String key, KeyPair keypair) {
+		String privateKey = Base64.getEncoder().encodeToString(keypair.getPrivate().getEncoded());
+		String publicKey = Base64.getEncoder().encodeToString(keypair.getPublic().getEncoded());
+		setString(key + "_PUBLIC", publicKey);
+		setString(key + "_PRIVATE", privateKey);
+	}
+
+	public KeyPair getKeyPair(String key) throws NoSuchAlgorithmException, InvalidKeySpecException {
+		PKCS8EncodedKeySpec publicKeySpec = new PKCS8EncodedKeySpec(
+				Base64.getDecoder().decode(getString(key + "_PUBLIC")));
+		PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
+				Base64.getDecoder().decode(getString(key + "_PRIVATE")));
+		KeyFactory kf = KeyFactory.getInstance("RSA");
+		return new KeyPair(kf.generatePublic(publicKeySpec), kf.generatePrivate(privateKeySpec));
 	}
 
 	public int getInt(String key, int defaultvalue) {

@@ -9,6 +9,7 @@ import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -68,6 +69,16 @@ public class EncryptUtils {
 				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
 				cipher.init(Cipher.ENCRYPT_MODE, publickey);
 				return cipher.doFinal(str);
+			}
+		}
+
+		public static class DECRYPT {
+			public static String decodeToString(PrivateKey privatekey, String str)
+					throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException,
+					NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException {
+				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
+				cipher.init(Cipher.DECRYPT_MODE, privatekey);
+				return byteArrayToHex(cipher.doFinal(str.getBytes()));
 			}
 		}
 
