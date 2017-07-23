@@ -1,24 +1,21 @@
 package biancso.mevius.packet;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
+
+import biancso.mevius.packet.file.PacketFile;
 
 @SuppressWarnings("serial")
 public class MeviusFilePacket extends MeviusPacket {
-	private final byte[] filedata;
+	private final PacketFile file;
 
+	@Deprecated
 	public MeviusFilePacket(File file) throws IOException {
-		filedata = Files.readAllBytes(file.toPath());
+		this.file = new PacketFile(file);
 	}
 
-	public void write(File file) throws IOException {
-		if (!file.exists())
-			file.createNewFile();
-		FileOutputStream fos = new FileOutputStream(file);
-		fos.write(filedata, 0, filedata.length);
-		fos.flush();
-		fos.close();
+	public MeviusFilePacket(PacketFile file) {
+		this.file = file;
 	}
+
 }
