@@ -10,11 +10,11 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Properties;
 
-public class Setting {
+public class Configuration {
 	private Properties prop = new Properties();
 	private File propfile;
 
-	public Setting(File file) {
+	public Configuration(File file) {
 		if (!file.exists())
 			try {
 				file.createNewFile();
@@ -30,12 +30,12 @@ public class Setting {
 		}
 	}
 
-	private Setting(Properties prop, File file) {
+	private Configuration(Properties prop, File file) {
 		this.prop = prop;
 		this.propfile = file;
 	}
 
-	public Setting(File file, Charset charset) {
+	public Configuration(File file, Charset charset) {
 		if (!file.exists())
 			try {
 				file.createNewFile();
@@ -51,8 +51,8 @@ public class Setting {
 		}
 	}
 
-	public static Setting defaultProperties(Properties prop, File file) {
-		return new Setting(prop, file);
+	public static Configuration defaultProperties(Properties prop, File file) {
+		return new Configuration(prop, file);
 	}
 
 	public void save() {
