@@ -16,7 +16,14 @@ public class MeviusCipherKey {
 	public MeviusCipherType getKeyType() throws UnsupportedMeviusKeyException {
 		if (key instanceof PrivateKey || key instanceof PublicKey)
 			return MeviusCipherType.RSA;
-		
 		throw new UnsupportedMeviusKeyException(key.getClass().getName() + " is not supported!");
+	}
+
+	public PrivateKey getRSAPrivateKey() {
+		return (PrivateKey) key;
+	}
+
+	public PublicKey getRSAPublicKey() {
+		return (PublicKey) key;
 	}
 }
