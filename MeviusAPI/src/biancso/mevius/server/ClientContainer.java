@@ -6,8 +6,8 @@ import java.util.UUID;
 
 import javax.management.RuntimeErrorException;
 
+import biancso.mevius.client.MeviusClient;
 import biancso.mevius.server.ConnectionHandler.ConnectionType;
-import biancso.mevius.wrapper.client.MeviusClient;
 
 public class ClientContainer {
 	private HashMap<UUID, ? extends MeviusClient> socketMap;

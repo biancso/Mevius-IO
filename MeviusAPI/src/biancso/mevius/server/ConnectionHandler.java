@@ -5,10 +5,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+import biancso.mevius.client.MeviusClient;
 import biancso.mevius.server.handler.ClientExit;
 import biancso.mevius.server.handler.ClientJoin;
 import biancso.mevius.server.handler.ConnectionListener;
-import biancso.mevius.wrapper.client.MeviusClient;
 
 public class ConnectionHandler {
 	private ArrayList<ConnectionListener> listeners = new ArrayList<>();

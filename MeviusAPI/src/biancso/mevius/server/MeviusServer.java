@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.SocketException;
 
+import biancso.mevius.client.MeviusClient;
 import biancso.mevius.server.exceptions.ServerCreateFailException;
-import biancso.mevius.wrapper.client.MeviusClient;
 
 public class MeviusServer extends Thread {
 	private final ServerSocket serversocket;

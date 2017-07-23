@@ -1,4 +1,4 @@
-package biancso.mevius.wrapper.client;
+package biancso.mevius.client;
 
 import java.io.IOException;
 import java.net.InetAddress;
