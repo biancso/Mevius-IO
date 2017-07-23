@@ -20,23 +20,17 @@ public class MeviusCipher {
 		if (!isSupportedTarget(toEncrypt))
 			throw new UnsupportedEncryptTargetException(toEncrypt.getClass().getSimpleName() + " is not supported!");
 		this.action = action;
-		switch (action.getAction()) {
-		case 0: // on encrypt
-			switch (type.getType()) {
-			case "rsa":
-				rsaencrypt(key, toEncrypt);
-				break;
-			}
-			break;
-		case 1: // on decrypt
-
+		switch (type.getType()) {
+		case "rsa":
+			rsaaction(key, toEncrypt);
 			break;
 		}
 	}
 
-	private void rsaencrypt(MeviusCipherKey k, Object o) {
-		PublicKey key = k.getRSAPublicKey();
-		if (o instanceof String) {
+	private void rsaaction(MeviusCipherKey k, Object o) {
+		if (action.getAction() == 0) {
+			
+		} else {
 
 		}
 	}
