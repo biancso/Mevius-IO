@@ -17,8 +17,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Properties;
 
-import javax.net.ssl.X509KeyManager;
-
 public class Configuration {
 	private Properties prop = new Properties();
 	private File propfile;
