@@ -1,14 +1,17 @@
 package biancso.mevius.utils.cipher;
 
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.PublicKey;
+import java.util.Base64;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import biancso.mevius.utils.cipher.exceptions.IllegalMeviusKeyException;
 import biancso.mevius.utils.cipher.exceptions.UnsupportedEncryptTargetException;
@@ -32,6 +35,9 @@ public class MeviusCipher {
 		switch (type.getType()) {
 		case "rsa":
 			rsaaction(key, toEncrypt);
+			break;
+		case "aes256":
+			aes256action(key, toEncrypt);
 			break;
 		}
 	}
@@ -60,18 +66,64 @@ public class MeviusCipher {
 		return sb.toString();
 	}
 
+	private void aes256action(MeviusCipherKey k, Object o) throws InvalidKeyException, IllegalBlockSizeException {
+		try {
+			String iv = k.getAES256Key().substring(0, 16);
+			byte[] keyBytes = new byte[16];
+			byte[] b = k.getAES256Key().getBytes();
+			int len = b.length;
+			if (len > keyBytes.length)
+				len = keyBytes.length;
+			System.arraycopy(b, 0, keyBytes, 0, len);
+			SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
+			Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			if (action.getAction() == 0) {
+				c.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(iv.getBytes()));
+				byte[] encrypted, toencrypt;
+				if (o instanceof String) {
+					toencrypt = ((String) o).getBytes();
+				} else {
+					toencrypt = (byte[]) o;
+				}
+				encrypted = c.doFinal(toencrypt);
+				encodedstringdata = new String(Base64.getEncoder().encode(encrypted));
+				encodedbytedata = encrypted;
+			} else {
+				c.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv.getBytes()));
+				byte[] decrypted, todecrypt;
+				if (o instanceof String) {
+					todecrypt = ((String) o).getBytes();
+				} else {
+					todecrypt = (byte[]) o;
+				}
+				decrypted = c.doFinal(todecrypt);
+				plainstringdata = new String(Base64.getEncoder().encode(decrypted));
+				plainbytedata = decrypted;
+			}
+		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidAlgorithmParameterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	private void rsaaction(MeviusCipherKey k, Object o) throws InvalidKeyException, IllegalBlockSizeException {
 		try {
 			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
 			if (action.getAction() == 0) {
-				byte[] strb = ((String) o).getBytes();
+				byte[] strb = ((String) o).getBytes(); // need to fix it more comfortable
 				cipher.init(Cipher.ENCRYPT_MODE, k.getRSAPublicKey());
 				byte[] cf = cipher.doFinal(strb);
 				encodedstringdata = byteArrayToHex(cf);
 				encodedbytedata = cf;
 			} else {
 				cipher.init(Cipher.DECRYPT_MODE, k.getRSAPrivateKey());
-				byte[] strb = hexToByteArray(((String) o));
+				byte[] strb = hexToByteArray(((String) o)); // need to fix it more comfortable
 				byte[] cf = cipher.doFinal(strb);
 				plainstringdata = new String(cf);
 				plainbytedata = cf;
