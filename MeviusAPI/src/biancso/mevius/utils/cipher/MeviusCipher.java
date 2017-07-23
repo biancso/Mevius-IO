@@ -92,12 +92,12 @@ public class MeviusCipher {
 				c.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv.getBytes()));
 				byte[] decrypted, todecrypt;
 				if (o instanceof String) {
-					todecrypt = ((String) o).getBytes();
+					todecrypt = Base64.getDecoder().decode(((String) o).getBytes());
 				} else {
 					todecrypt = (byte[]) o;
 				}
 				decrypted = c.doFinal(todecrypt);
-				plainstringdata = new String(Base64.getEncoder().encode(decrypted));
+				plainstringdata = new String(decrypted);
 				plainbytedata = decrypted;
 			}
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {

@@ -39,6 +39,8 @@ public class MeviusCipherKey {
 	public MeviusCipherType getKeyType() throws UnsupportedMeviusKeyException {
 		if (key instanceof PrivateKey || key instanceof PublicKey)
 			return MeviusCipherType.RSA;
+		if (skey != null && key == null)
+			return MeviusCipherType.AES256;
 		throw new UnsupportedMeviusKeyException(key.getClass().getName() + " is not supported!");
 	}
 
