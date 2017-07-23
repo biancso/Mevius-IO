@@ -1,4 +1,4 @@
-package biancso.mevius.server.utils;
+package biancso.mevius.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
