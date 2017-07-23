@@ -116,14 +116,24 @@ public class MeviusCipher {
 		try {
 			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
 			if (action.getAction() == 0) {
-				byte[] strb = ((String) o).getBytes(); // need to fix it more comfortable
+				byte[] strb; // need to fix it more comfortable
+				if (o instanceof String) {
+					strb = ((String) o).getBytes();
+				} else {
+					strb = (byte[]) o;
+				}
 				cipher.init(Cipher.ENCRYPT_MODE, k.getRSAPublicKey());
 				byte[] cf = cipher.doFinal(strb);
 				encodedstringdata = byteArrayToHex(cf);
 				encodedbytedata = cf;
 			} else {
 				cipher.init(Cipher.DECRYPT_MODE, k.getRSAPrivateKey());
-				byte[] strb = hexToByteArray(((String) o)); // need to fix it more comfortable
+				byte[] strb; // need to fix it more comfortable
+				if (o instanceof String) {
+					strb = hexToByteArray(((String) o));
+				} else {
+					strb = (byte[]) o;
+				}
 				byte[] cf = cipher.doFinal(strb);
 				plainstringdata = new String(cf);
 				plainbytedata = cf;
