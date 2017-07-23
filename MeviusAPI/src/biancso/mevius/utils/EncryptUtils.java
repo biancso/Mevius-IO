@@ -24,7 +24,54 @@ import javax.crypto.spec.SecretKeySpec;
 public class EncryptUtils {
 
 	public static class RSA {
-		private static byte[] hexToByteArray(String hex) {
+		public static class KEY {
+			public static KeyPair generateKeyPair(int keysize)
+					throws NoSuchAlgorithmException, NoSuchProviderException {
+				SecureRandom random = new SecureRandom();
+				KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "SunJSSE");
+				kpg.initialize(keysize, random);
+				KeyPair kp = kpg.generateKeyPair();
+				return kp;
+			}
+		}
+
+		public static class ENCRYPT {
+			public static String encodeToString(PublicKey publickey, String str)
+					throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException,
+					NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException {
+				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
+				byte[] strb = str.getBytes();
+				cipher.init(Cipher.ENCRYPT_MODE, publickey);
+				return byteArrayToHex(cipher.doFinal(strb));
+			}
+
+			public static byte[] encodeToByte(PublicKey publickey, String str)
+					throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException,
+					InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
+				byte[] strb = str.getBytes();
+				cipher.init(Cipher.ENCRYPT_MODE, publickey);
+				return cipher.doFinal(strb);
+			}
+
+			public static String encodeToString(PublicKey publickey, byte[] str)
+					throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException,
+					InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
+				cipher.init(Cipher.ENCRYPT_MODE, publickey);
+				return byteArrayToHex(cipher.doFinal(str));
+			}
+
+			public static byte[] encodeToByte(PublicKey publickey, byte[] str)
+					throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException,
+					NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException {
+				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
+				cipher.init(Cipher.ENCRYPT_MODE, publickey);
+				return cipher.doFinal(str);
+			}
+		}
+
+		protected static byte[] hexToByteArray(String hex) {
 			if (hex == null || hex.length() == 0) {
 				return null;
 			}
@@ -35,7 +82,7 @@ public class EncryptUtils {
 			return ba;
 		}
 
-		private static String byteArrayToHex(byte[] ba) {
+		protected static String byteArrayToHex(byte[] ba) {
 			if (ba == null || ba.length == 0) {
 				return null;
 			}
@@ -48,45 +95,6 @@ public class EncryptUtils {
 			return sb.toString();
 		}
 
-		public static KeyPair generateKeyPair(int keysize) throws NoSuchAlgorithmException, NoSuchProviderException {
-			SecureRandom random = new SecureRandom();
-			KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "SunJSSE");
-			kpg.initialize(keysize, random);
-			KeyPair kp = kpg.generateKeyPair();
-			return kp;
-		}
-
-		public static String encodeToString(PublicKey publickey, String str)
-				throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException,
-				NoSuchProviderException, NoSuchPaddingException {
-			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
-			byte[] strb = str.getBytes();
-			cipher.init(Cipher.ENCRYPT_MODE, publickey);
-			return byteArrayToHex(cipher.doFinal(strb));
-		}
-
-		public static byte[] encodeToByte(PublicKey publickey, String str)
-				throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException,
-				IllegalBlockSizeException, BadPaddingException {
-			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
-			byte[] strb = str.getBytes();
-			cipher.init(Cipher.ENCRYPT_MODE, publickey);
-			return cipher.doFinal(strb);
-		}
-
-		public static String encodeToString(PublicKey publickey, byte[] str)
-				throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException,
-				IllegalBlockSizeException, BadPaddingException {
-			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
-			cipher.init(Cipher.ENCRYPT_MODE, publickey);
-			return byteArrayToHex(cipher.doFinal(str));
-		}
-
-		public static byte[] encodeToByte(PublicKey publickey, byte[] str) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException {
-			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
-			cipher.init(Cipher.ENCRYPT_MODE, publickey);
-			return cipher.doFinal(str);
-		}
 	}
 
 	public static class MD5 {
