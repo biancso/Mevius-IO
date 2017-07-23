@@ -12,7 +12,7 @@ public class MeviusImagePacket extends MeviusPacket {
 
 	private final byte[] imageBuffer;
 
-	public MeviusImagePacket(BufferedImage image) throws IOException {
+	public MeviusImagePacket(BufferedImage image) throws IOException, ClassNotFoundException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream(image.getHeight() * image.getWidth());
 		ImageIO.setUseCache(false);
 		ImageIO.write(image, "jpg", baos);
