@@ -29,4 +29,7 @@ public class MeviusCipher {
 
 	}
 
+	private boolean isSupportedTarget(Object toEncrypt) {
+		return true;
+	}
 }
