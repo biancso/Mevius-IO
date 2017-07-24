@@ -1,22 +1,16 @@
 package biancso.mevius.utils.cipher;
 
-import java.security.Key;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.Random;
 
 import biancso.mevius.utils.cipher.exceptions.UnsupportedMeviusKeyException;
 
 public class MeviusCipherKey {
-	private Key key;
-	private String skey;
+	private Object key;
+	private MeviusCipherType type;
 
-	public MeviusCipherKey(Key key) {
+	public MeviusCipherKey(Object key, MeviusCipherType type) {
 		this.key = key;
-	}
-
-	public MeviusCipherKey(String key) {
-		skey = key;
+		this.type = type;
 	}
 
 	public static MeviusCipherKey randomAES256Key() {
@@ -33,27 +27,15 @@ public class MeviusCipherKey {
 				break;
 			}
 		}
-		return new MeviusCipherKey(sb.toString());
+		return new MeviusCipherKey(sb.toString(), MeviusCipherType.AES256);
 	}
 
 	public MeviusCipherType getKeyType() throws UnsupportedMeviusKeyException {
-		if (key instanceof PrivateKey || key instanceof PublicKey)
-			return MeviusCipherType.RSA;
-		if (skey != null && key == null)
-			return MeviusCipherType.AES256;
-		throw new UnsupportedMeviusKeyException(key.getClass().getName() + " is not supported!");
+		return type;
 	}
 
-	public String getAES256Key() {
-		return skey;
-	}
-
-	public PrivateKey getRSAPrivateKey() {
-		return (PrivateKey) key;
-	}
-
-	public PublicKey getRSAPublicKey() {
-		return (PublicKey) key;
-	}
-
+	@SuppressWarnings("unchecked")
+	public <T> T getKey() {
+		return (T) type.getKeyType().cast(key);
+	} // !!!! MeviusCipherType.RSA will return KeyPair
 }

@@ -2,6 +2,7 @@ package biancso.mevius.utils.cipher;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Base64;
@@ -24,15 +25,13 @@ public class MeviusCipher {
 	private String encodedstringdata;
 	private MeviusCipherAction action;
 
-	public MeviusCipher(MeviusCipherType type, MeviusCipherAction action, MeviusCipherKey key, Object toEncrypt)
+	public MeviusCipher(MeviusCipherKey key, MeviusCipherAction action,  Object toEncrypt)
 			throws IllegalMeviusKeyException, UnsupportedMeviusKeyException, UnsupportedEncryptTargetException,
 			InvalidKeyException, IllegalBlockSizeException {
-		if (!key.getKeyType().equals(type))
-			throw new IllegalMeviusKeyException(key.getKeyType().name() + " is not matched with " + type.name());
 		if (!isSupportedTarget(toEncrypt))
 			throw new UnsupportedEncryptTargetException(toEncrypt.getClass().getSimpleName() + " is not supported!");
 		this.action = action;
-		switch (type.getType()) {
+		switch (key.getKeyType().getType()) {
 		case "rsa":
 			rsaaction(key, toEncrypt);
 			break;
@@ -68,9 +67,9 @@ public class MeviusCipher {
 
 	private void aes256action(MeviusCipherKey k, Object o) throws InvalidKeyException, IllegalBlockSizeException {
 		try {
-			String iv = k.getAES256Key().substring(0, 16);
+			String iv = ((String) k.getKey()).substring(0, 16);
 			byte[] keyBytes = new byte[16];
-			byte[] b = k.getAES256Key().getBytes();
+			byte[] b = ((String) k.getKey()).getBytes();
 			int len = b.length;
 			if (len > keyBytes.length)
 				len = keyBytes.length;
@@ -115,6 +114,7 @@ public class MeviusCipher {
 	private void rsaaction(MeviusCipherKey k, Object o) throws InvalidKeyException, IllegalBlockSizeException {
 		try {
 			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
+			KeyPair kp = k.getKey();
 			if (action.getAction() == 0) {
 				byte[] strb; // need to fix it more comfortable
 				if (o instanceof String) {
@@ -122,12 +122,12 @@ public class MeviusCipher {
 				} else {
 					strb = (byte[]) o;
 				}
-				cipher.init(Cipher.ENCRYPT_MODE, k.getRSAPublicKey());
+				cipher.init(Cipher.ENCRYPT_MODE, kp.getPublic());
 				byte[] cf = cipher.doFinal(strb);
 				encodedstringdata = byteArrayToHex(cf);
 				encodedbytedata = cf;
 			} else {
-				cipher.init(Cipher.DECRYPT_MODE, k.getRSAPrivateKey());
+				cipher.init(Cipher.DECRYPT_MODE, kp.getPrivate());
 				byte[] strb; // need to fix it more comfortable
 				if (o instanceof String) {
 					strb = hexToByteArray(((String) o));
