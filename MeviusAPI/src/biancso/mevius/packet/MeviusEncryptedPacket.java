@@ -19,7 +19,7 @@ import biancso.mevius.utils.cipher.MeviusCipherKey;
 import biancso.mevius.utils.cipher.exceptions.UnsupportedMeviusKeyException;
 
 @SuppressWarnings("serial")
-public class MeviusEncryptedPacket extends MeviusPacket {
+public class MeviusEncryptedPacket extends MeviusPacket{
 	private final SealedObject encryptedobj;
 
 	public MeviusEncryptedPacket(MeviusCipherKey key, MeviusPacket packet)
@@ -77,7 +77,7 @@ public class MeviusEncryptedPacket extends MeviusPacket {
 			System.arraycopy(b, 0, keyBytes, 0, len);
 			SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
 			Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
-			c.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(iv.getBytes()));
+			c.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv.getBytes()));
 			return (MeviusPacket) encryptedobj.getObject(c);
 		} catch (NoSuchAlgorithmException | InvalidKeyException | InvalidAlgorithmParameterException
 				| NoSuchPaddingException | ClassNotFoundException | IllegalBlockSizeException | BadPaddingException
