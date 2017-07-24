@@ -1,8 +1,10 @@
 package biancso.mevius.utils.cipher;
 
+import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Base64;
@@ -15,19 +17,18 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import biancso.mevius.utils.cipher.exceptions.IllegalMeviusKeyException;
+import biancso.mevius.utils.cipher.exceptions.InvalidCipherTypeException;
 import biancso.mevius.utils.cipher.exceptions.UnsupportedEncryptTargetException;
 import biancso.mevius.utils.cipher.exceptions.UnsupportedMeviusKeyException;
 
 public class MeviusCipher {
-	private byte[] encodedbytedata;
-	private byte[] plainbytedata;
-	private String plainstringdata;
-	private String encodedstringdata;
+	private String stringdata;
+	private byte[] bytedata;
 	private MeviusCipherAction action;
 
-	public MeviusCipher(MeviusCipherKey key, MeviusCipherAction action,  Object toEncrypt)
+	public MeviusCipher(MeviusCipherKey key, MeviusCipherAction action, Object toEncrypt)
 			throws IllegalMeviusKeyException, UnsupportedMeviusKeyException, UnsupportedEncryptTargetException,
-			InvalidKeyException, IllegalBlockSizeException {
+			InvalidKeyException, IllegalBlockSizeException, InvalidCipherTypeException {
 		if (!isSupportedTarget(toEncrypt))
 			throw new UnsupportedEncryptTargetException(toEncrypt.getClass().getSimpleName() + " is not supported!");
 		this.action = action;
@@ -38,6 +39,24 @@ public class MeviusCipher {
 		case "aes256":
 			aes256action(key, toEncrypt);
 			break;
+		default:
+			throw new InvalidCipherTypeException(key.getKeyType().name() + " is not valid !");
+		}
+	}
+
+	public MeviusCipher(MeviusCipherType type, String toEncrypt) throws InvalidCipherTypeException {
+		switch (type.getType()) {
+		case "md5":
+			md5action(toEncrypt);
+			break;
+		case "sha1":
+			sha1action(toEncrypt);
+			break;
+		case "sha256":
+			sha256action(toEncrypt);
+			break;
+		default:
+			throw new InvalidCipherTypeException(type.name() + " is not valid !");
 		}
 	}
 
@@ -65,6 +84,54 @@ public class MeviusCipher {
 		return sb.toString();
 	}
 
+	private void md5action(String s) {
+		try {
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			md.update(s.getBytes());
+			byte[] buff = md.digest();
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < buff.length; i++) {
+				sb.append(Integer.toString((buff[i] & 0xff) + 0x100, 16).substring(1));
+			}
+			stringdata = sb.toString();
+			bytedata = new byte[] {};
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void sha1action(String s) {
+		try {
+			MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+			crypt.reset();
+			crypt.update(s.getBytes());
+			stringdata = new BigInteger(1, crypt.digest()).toString(16);
+			bytedata = new byte[] {};
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void sha256action(String s) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] h = digest.digest(s.getBytes());
+			StringBuffer sb = new StringBuffer();
+			for (int i = 0; i < h.length; i++) {
+				String hex = Integer.toHexString(0xff & h[i]);
+				if (hex.length() == 1)
+					sb.append('0');
+				sb.append(hex);
+			}
+			stringdata = sb.toString();
+			bytedata = new byte[] {};
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	private void aes256action(MeviusCipherKey k, Object o) throws InvalidKeyException, IllegalBlockSizeException {
 		try {
 			String iv = ((String) k.getKey()).substring(0, 16);
@@ -85,8 +152,8 @@ public class MeviusCipher {
 					toencrypt = (byte[]) o;
 				}
 				encrypted = c.doFinal(toencrypt);
-				encodedstringdata = new String(Base64.getEncoder().encode(encrypted));
-				encodedbytedata = encrypted;
+				stringdata = new String(Base64.getEncoder().encode(encrypted));
+				bytedata = encrypted;
 			} else {
 				c.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv.getBytes()));
 				byte[] decrypted, todecrypt;
@@ -96,8 +163,8 @@ public class MeviusCipher {
 					todecrypt = (byte[]) o;
 				}
 				decrypted = c.doFinal(todecrypt);
-				plainstringdata = new String(decrypted);
-				plainbytedata = decrypted;
+				stringdata = new String(decrypted);
+				bytedata = decrypted;
 			}
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
 			// TODO Auto-generated catch block
@@ -124,8 +191,8 @@ public class MeviusCipher {
 				}
 				cipher.init(Cipher.ENCRYPT_MODE, kp.getPublic());
 				byte[] cf = cipher.doFinal(strb);
-				encodedstringdata = byteArrayToHex(cf);
-				encodedbytedata = cf;
+				stringdata = byteArrayToHex(cf);
+				bytedata = cf;
 			} else {
 				cipher.init(Cipher.DECRYPT_MODE, kp.getPrivate());
 				byte[] strb; // need to fix it more comfortable
@@ -135,8 +202,8 @@ public class MeviusCipher {
 					strb = (byte[]) o;
 				}
 				byte[] cf = cipher.doFinal(strb);
-				plainstringdata = new String(cf);
-				plainbytedata = cf;
+				stringdata = new String(cf);
+				bytedata = cf;
 			}
 		} catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | BadPaddingException e) {
 			e.printStackTrace();
@@ -148,10 +215,10 @@ public class MeviusCipher {
 	}
 
 	public byte[] toBytes() {
-		return action == MeviusCipherAction.ENCRYPT ? encodedbytedata : plainbytedata;
+		return bytedata;
 	}
 
 	public String toString() {
-		return action == MeviusCipherAction.ENCRYPT ? encodedstringdata : plainstringdata;
+		return stringdata;
 	}
 }

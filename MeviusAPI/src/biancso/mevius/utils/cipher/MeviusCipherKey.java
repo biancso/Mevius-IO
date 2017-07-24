@@ -1,10 +1,15 @@
 package biancso.mevius.utils.cipher;
 
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Random;
 
 import javax.management.RuntimeErrorException;
@@ -19,7 +24,7 @@ public class MeviusCipherKey {
 		this.key = key;
 		this.type = type;
 	}
-	
+
 	public static MeviusCipherKey randomRSAKeyPair(int keysize) {
 		SecureRandom random = new SecureRandom();
 		KeyPairGenerator kpg;
@@ -60,4 +65,6 @@ public class MeviusCipherKey {
 	public <T> T getKey() {
 		return (T) type.getKeyType().cast(key);
 	} // !!!! MeviusCipherType.RSA will return KeyPair
+
+	
 }
