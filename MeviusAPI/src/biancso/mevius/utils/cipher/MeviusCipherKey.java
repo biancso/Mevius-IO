@@ -1,6 +1,13 @@
 package biancso.mevius.utils.cipher;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
 import java.util.Random;
+
+import javax.management.RuntimeErrorException;
 
 import biancso.mevius.utils.cipher.exceptions.UnsupportedMeviusKeyException;
 
@@ -11,6 +18,21 @@ public class MeviusCipherKey {
 	public MeviusCipherKey(Object key, MeviusCipherType type) {
 		this.key = key;
 		this.type = type;
+	}
+	
+	public static MeviusCipherKey randomRSAKeyPair(int keysize) {
+		SecureRandom random = new SecureRandom();
+		KeyPairGenerator kpg;
+		try {
+			kpg = KeyPairGenerator.getInstance("RSA", "SunJSSE");
+			kpg.initialize(keysize, random);
+			KeyPair kp = kpg.generateKeyPair();
+			return new MeviusCipherKey(kp, MeviusCipherType.RSA);
+		} catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		throw new RuntimeErrorException(new Error("Unhandled error while creating new RSAKeyPair"));
 	}
 
 	public static MeviusCipherKey randomAES256Key() {
