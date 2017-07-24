@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import biancso.mevius.packet.MeviusEncryptedPacket;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.MeviusResponsablePacket;
 
@@ -46,6 +47,10 @@ public class MeviusOutputStream {
 			oos.writeObject(packet);
 			oos.flush();
 		}
+	}
+
+	public final boolean isEncrypted(MeviusPacket packet) {
+		return packet instanceof MeviusEncryptedPacket;
 	}
 
 	public final void flush() throws IOException {
