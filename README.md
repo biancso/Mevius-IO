@@ -6,8 +6,13 @@
  We use our own Object-Oriented-Packet, It will helps you to control your packets more easily.
  Texts, Images, even Files! nothing matter!
 
-
-
+ # MeviusCipher
+ > Example
+   ```java
+   MeviusCipherKey key = MeviusCipherKey.randomAES256Key();
+			MeviusCipher cipher = new MeviusCipher(key, MeviusCipherAction.DECRYPT, STRING_TO_ENCRYPT);
+   cipher.toString(); // cipher.toByte() also works for byte[]
+   ```
 
 
 # Donation
