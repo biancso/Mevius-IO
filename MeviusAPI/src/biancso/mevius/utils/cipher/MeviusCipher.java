@@ -16,8 +16,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import biancso.mevius.packet.MeviusEncryptedPacket;
-import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.utils.cipher.exceptions.IllegalMeviusKeyException;
 import biancso.mevius.utils.cipher.exceptions.InvalidCipherTypeException;
 import biancso.mevius.utils.cipher.exceptions.UnsupportedEncryptTargetException;
@@ -226,20 +224,6 @@ public class MeviusCipher {
 
 	public MeviusCipherAction getAction() {
 		return this.action;
-	}
-
-	public static MeviusEncryptedPacket encryptPacket(MeviusCipherKey key, MeviusCipherAction action) throws InvalidCipherTypeException, UnsupportedMeviusKeyException {
-		switch (key.getKeyType().getType()) {
-		case "aes256":
-			return aes256packetaction();
-		default:
-			throw new InvalidCipherTypeException(
-					key.getKeyType().getType() + " is not supported for MeviusEncryptedPacket!");
-		}
-	}
-
-	private static MeviusEncryptedPacket aes256packetaction() {
-		
 	}
 
 }
