@@ -20,7 +20,7 @@
    MeviusCipher cipher = new MeviusCipher(key, MeviusCipherAction.ENCRYPT, "TEST");
    cipher.toString(); // cipher.toByte() also works for byte[]
    ```
-
+ >> You can also store your RSAKeyPair with my Configuration or StringKeyPair
 # Donation
 
 My bitcoin addr : 1NDGV92UPmgH9wK6b9aHdz6BJPPJsmp6x5
