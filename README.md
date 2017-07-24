@@ -7,13 +7,19 @@
  Texts, Images, even Files! nothing matter!
 
  # MeviusCipher
- > Example
+ > Examples
+ >> For AES256
    ```java
    MeviusCipherKey key = MeviusCipherKey.randomAES256Key();
-			MeviusCipher cipher = new MeviusCipher(key, MeviusCipherAction.DECRYPT, STRING_TO_ENCRYPT);
+   MeviusCipher cipher = new MeviusCipher(key, MeviusCipherAction.DECRYPT, STRING_TO_ENCRYPT);
    cipher.toString(); // cipher.toByte() also works for byte[]
    ```
-
+ >> For RSA
+   ```java
+   MeviusCipherKey key = MeviusCipherKey.randomRSAKeyPair(512); // It will return KeyPair
+   MeviusCipher cipher = new MeviusCipher(key, MeviusCipherAction.ENCRYPT, "TEST");
+   cipher.toString(); // cipher.toByte() also works for byte[]
+   ```
 
 # Donation
 
