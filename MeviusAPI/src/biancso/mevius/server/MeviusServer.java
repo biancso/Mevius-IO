@@ -46,7 +46,6 @@ public class MeviusServer extends Thread {
 		super.interrupt();
 	}
 
-
 	public ClientContainer getClientContainer() {
 		return this.clientcontainer;
 	}
