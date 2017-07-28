@@ -6,7 +6,7 @@ import biancso.mevius.packet.MeviusPacket;
 
 public class ImagePacketEvent extends PacketEvent {
 
-	public ImagePacketEvent(MeviusPacket packet, MeviusClient client, boolean receive) {
+	public ImagePacketEvent(MeviusPacket packet, MeviusClient client, PacketEventType receive) {
 		super(packet, client, receive);
 		// TODO Auto-generated constructor stub
 	}

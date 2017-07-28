@@ -1,13 +1,11 @@
 package biancso.mevius.packet.handler;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-import biancso.mevius.client.MeviusClient;
 import biancso.mevius.packet.events.PacketEvent;
-import biancso.mevius.packet.events.PacketEventType;
 import biancso.mevius.packet.handler.exceptions.ListenerAlreadyRegisteredException;
-import biancso.mevius.server.exceptions.PacketUnsupportedException;
 
 public class PacketHandler {
 	private final ArrayList<PacketListener> listeners;
@@ -22,27 +20,20 @@ public class PacketHandler {
 		listeners.add(listener);
 	}
 
-	public final void callEvent(PacketEvent event, PacketEventType type) {
-		boolean receive = type == PacketEventType.RECEIVE ? true : false;
+	public final void callEvent(PacketEvent event) {
 		for (PacketListener listener : listeners) {
 			for (Method m : listener.getClass().getMethods()) {
 				if (m.getParameterTypes().length != 1)
 					continue;
-				if (!m.getParameterTypes()[0].isAssignableFrom(PacketEvent.class))
+				if (!m.getParameterTypes()[0].equals(event.getClass()))
 					continue;
 				if (!m.isAnnotationPresent(EventMethod.class))
 					continue;
-				String packet = event.getPacketClass().getSimpleName();
-				switch (packet) {
-				
-				default:
-					try {
-						throw new PacketUnsupportedException(event.getPacket());
-					} catch (PacketUnsupportedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					break;
+				try {
+					m.invoke(listener, event);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 		}

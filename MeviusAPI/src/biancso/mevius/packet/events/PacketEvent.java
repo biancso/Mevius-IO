@@ -8,10 +8,10 @@ public abstract class PacketEvent {
 	private final boolean isreceived;
 	private final MeviusClient client;
 
-	public PacketEvent(MeviusPacket packet, MeviusClient client, boolean receive) {
+	public PacketEvent(MeviusPacket packet, MeviusClient client, PacketEventType type) {
 		this.packet = packet;
 		this.client = client;
-		this.isreceived = receive;
+		this.isreceived = type.equals(PacketEventType.RECEIVE);
 	}
 
 	public MeviusPacket getPacket() {
