@@ -25,7 +25,8 @@ public class PacketHandler {
 			for (Method m : listener.getClass().getMethods()) {
 				if (m.getParameterTypes().length != 1)
 					continue;
-				if (!m.getParameterTypes()[0].equals(event.getClass()))
+				if (!m.getParameterTypes()[0].equals(event.getClass())
+						&& !m.getParameterTypes()[0].getSuperclass().equals(event.getClass()))
 					continue;
 				if (!m.isAnnotationPresent(EventMethod.class))
 					continue;
