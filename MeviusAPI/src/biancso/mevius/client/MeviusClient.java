@@ -9,15 +9,9 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.UUID;
 
-import biancso.mevius.packet.MeviusFilePacket;
-import biancso.mevius.packet.MeviusImagePacket;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.MeviusResponsablePacket;
-import biancso.mevius.packet.MeviusTextPacket;
-import biancso.mevius.packet.events.FilePacketEvent;
-import biancso.mevius.packet.events.ImagePacketEvent;
 import biancso.mevius.packet.events.PacketEventType;
-import biancso.mevius.packet.events.TextPacketEvent;
 import biancso.mevius.packet.handler.PacketHandler;
 
 public class MeviusClient extends Thread {
@@ -69,15 +63,7 @@ public class MeviusClient extends Thread {
 				if (!(obj instanceof MeviusPacket))
 					continue;
 				MeviusPacket packet = (MeviusPacket) obj;
-				if (packet instanceof MeviusFilePacket) {
-					ph.callEvent(new FilePacketEvent(packet, this, PacketEventType.RECEIVE));
-				} else if (packet instanceof MeviusImagePacket) {
-					ph.callEvent(new ImagePacketEvent(packet, this, PacketEventType.RECEIVE));
-				} else if (packet instanceof MeviusTextPacket) {
-					ph.callEvent(new TextPacketEvent(packet, this, PacketEventType.RECEIVE));
-				} else {
-					System.out.println("Under development");
-				}
+				ph.callEvent(PacketHandler.getPacketEventInstance(packet, this, PacketEventType.RECEIVE));
 			} catch (ClassNotFoundException | IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

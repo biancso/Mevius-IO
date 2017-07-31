@@ -1,10 +1,14 @@
 package biancso.mevius.packet.handler;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+import biancso.mevius.client.MeviusClient;
+import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.events.PacketEvent;
+import biancso.mevius.packet.events.PacketEventType;
 import biancso.mevius.packet.handler.exceptions.ListenerAlreadyRegisteredException;
 
 public class PacketHandler {
@@ -25,8 +29,7 @@ public class PacketHandler {
 			for (Method m : listener.getClass().getMethods()) {
 				if (m.getParameterTypes().length != 1)
 					continue;
-				if (!m.getParameterTypes()[0].equals(event.getClass())
-						&& !m.getParameterTypes()[0].getSuperclass().equals(event.getClass()))
+				if (!m.getParameterTypes()[0].equals(event.getClass()))
 					continue;
 				if (!m.isAnnotationPresent(EventMethod.class))
 					continue;
@@ -38,5 +41,20 @@ public class PacketHandler {
 				}
 			}
 		}
+	}
+
+	public static PacketEvent getPacketEventInstance(MeviusPacket packet, MeviusClient client, PacketEventType type) {
+		try {
+			String eventclassname = "biancso.mevius.packet.events."
+					+ packet.getClass().getSimpleName().replace("Mevius", "") + "Event";
+			Class<?> clazz = Class.forName(eventclassname);
+			Constructor<?> constructor = clazz.getConstructor(MeviusPacket.class, MeviusClient.class,
+					PacketEventType.class);
+			return (PacketEvent) constructor.newInstance(packet, client, type);
+		} catch (NoSuchMethodException | SecurityException | ClassNotFoundException | InstantiationException
+				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			e.printStackTrace();
+		}
+		throw new RuntimeException("");
 	}
 }
