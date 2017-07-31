@@ -122,5 +122,6 @@ public class MeviusClient extends Thread {
 			oos.writeObject(packet);
 			oos.flush();
 		}
+		ph.callEvent(PacketHandler.getPacketEventInstance(packet, this, PacketEventType.SEND));
 	}
 }

@@ -10,12 +10,14 @@ public abstract class PacketEvent {
 	private final boolean isreceived;
 	private final MeviusClient client;
 	private final Date date;
+	private final PacketEventType type;
 
 	public PacketEvent(MeviusPacket packet, MeviusClient client, PacketEventType type) {
 		this.packet = packet;
 		this.client = client;
 		this.isreceived = type.equals(PacketEventType.RECEIVE);
 		this.date = new Date();
+		this.type = type;
 	}
 
 	public MeviusPacket getPacket() {
@@ -41,5 +43,9 @@ public abstract class PacketEvent {
 
 	public Date getWhen() {
 		return date;
+	}
+
+	public PacketEventType getEventType() {
+		return type;
 	}
 }

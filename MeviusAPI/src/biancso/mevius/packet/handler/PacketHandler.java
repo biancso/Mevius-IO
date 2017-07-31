@@ -27,11 +27,12 @@ public class PacketHandler {
 	public final void callEvent(PacketEvent event) {
 		for (PacketListener listener : listeners) {
 			for (Method m : listener.getClass().getMethods()) {
+				if (!m.isAnnotationPresent(EventMethod.class))
+					continue;
 				if (m.getParameterTypes().length != 1)
 					continue;
-				if (!m.getParameterTypes()[0].equals(event.getClass()))
-					continue;
-				if (!m.isAnnotationPresent(EventMethod.class))
+				Class<?> clazz = m.getParameterTypes()[0];
+				if (!clazz.equals(event.getClass()) && !event.getClass().isAssignableFrom(clazz))
 					continue;
 				try {
 					m.invoke(listener, event);
