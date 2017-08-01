@@ -1,4 +1,4 @@
-package biancso.mevius.server.handler;
+package biancso.mevius.connection;
 
 public interface ConnectionListener {
 

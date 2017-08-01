@@ -7,7 +7,7 @@ import java.util.UUID;
 import javax.management.RuntimeErrorException;
 
 import biancso.mevius.client.MeviusClient;
-import biancso.mevius.server.ConnectionHandler.ConnectionType;
+import biancso.mevius.connection.ConnectionType;
 
 public class ClientContainer {
 	private HashMap<UUID, ? extends MeviusClient> socketMap;
@@ -24,7 +24,7 @@ public class ClientContainer {
 		client.getSocket().close();
 		socketMap.remove(client.getUUID());
 	}
-
+	
 	protected void clientJoin(MeviusClient client) {
 		if (socketMap.containsValue(client))
 			try {
@@ -33,13 +33,13 @@ public class ClientContainer {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		server.connectionhandler.connection(ConnectionType.JOIN, client);
+		server.connectionhandler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, client);
 	}
 
 	protected void clientExit(MeviusClient client) {
 		if (!socketMap.containsValue(client))
 			throw new RuntimeErrorException(new Error("Undefined socket has disconnected"));
-		server.connectionhandler.connection(ConnectionType.EXIT, client);
+		server.connectionhandler.connection(ConnectionType.CLIENT_DISCONNECT_FROM_SERVER, client);
 		try {
 			disconnect(client);
 		} catch (IOException e) {

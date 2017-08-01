@@ -12,6 +12,8 @@ public class FileUtils {
 	///// File download methods
 	public static boolean downloadFile(URL url, File path, boolean overwrite) throws IOException {
 		InputStream is = url.openStream();
+		if (overwrite && path.exists())
+			overwrite(path);
 		BufferedOutputStream fos = new BufferedOutputStream(new FileOutputStream(path));
 		byte[] buff = new byte[1024];
 		int rb = 0;
@@ -27,5 +29,7 @@ public class FileUtils {
 		return downloadFile(url, path, true);
 	}
 
-	
+	private static void overwrite(File file) {
+		file.delete();
+	}
 }

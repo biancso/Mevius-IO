@@ -9,6 +9,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.UUID;
 
+import biancso.mevius.connection.ConnectionHandler;
+import biancso.mevius.connection.ConnectionType;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.MeviusResponsablePacket;
 import biancso.mevius.packet.events.PacketEventType;
@@ -20,24 +22,28 @@ public class MeviusClient extends Thread {
 	private final ObjectInputStream ois;
 	private final ObjectOutputStream oos;
 	private final PacketHandler ph;
+	private final ConnectionHandler ch;
 
 	// OutputStream flush
-	public MeviusClient(InetAddress addr, int port, PacketHandler ph) throws IOException {
+	public MeviusClient(InetAddress addr, int port, PacketHandler ph, ConnectionHandler handler) throws IOException {
 		socket = new Socket(addr, port);
 		uuid = UUID.randomUUID();
 		this.ph = ph;
 		oos = new ObjectOutputStream(socket.getOutputStream());
 		oos.flush();
 		ois = new ObjectInputStream(socket.getInputStream());
+		ch = handler;
+		ch.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this);
 	}
 
-	public MeviusClient(Socket socket, PacketHandler ph) throws IOException {
+	public MeviusClient(Socket socket, PacketHandler ph, ConnectionHandler handler) throws IOException {
 		this.socket = socket;
 		uuid = UUID.randomUUID();
 		this.ph = ph;
 		oos = new ObjectOutputStream(socket.getOutputStream());
 		oos.flush();
 		ois = new ObjectInputStream(socket.getInputStream());
+		ch = handler;
 	}
 
 	public void close() throws IOException {
@@ -65,10 +71,20 @@ public class MeviusClient extends Thread {
 				MeviusPacket packet = (MeviusPacket) obj;
 				ph.callEvent(PacketHandler.getPacketEventInstance(packet, this, PacketEventType.RECEIVE));
 			} catch (ClassNotFoundException | IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				try {
+					disconnect();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
 			}
 		}
+	}
+
+	public void disconnect() throws IOException {
+		socket.shutdownInput();
+		socket.shutdownOutput();
+		socket.close();
+		ch.connection(ConnectionType.CLIENT_DISCONNECT_FROM_SERVER, this);
 	}
 
 	@Override

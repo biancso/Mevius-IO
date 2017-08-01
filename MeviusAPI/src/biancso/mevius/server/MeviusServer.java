@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.SocketException;
 
 import biancso.mevius.client.MeviusClient;
+import biancso.mevius.connection.ConnectionHandler;
 import biancso.mevius.packet.handler.PacketHandler;
 import biancso.mevius.server.exceptions.ServerCreateFailException;
 
@@ -30,7 +31,7 @@ public class MeviusServer extends Thread {
 	public void run() {
 		while (running && !isInterrupted()) {
 			try {
-				MeviusClient client = new MeviusClient(serversocket.accept(), ph);
+				MeviusClient client = new MeviusClient(serversocket.accept(), ph, connectionhandler);
 				client.start();
 				clientcontainer.clientJoin(client);
 			} catch (IOException e) {
