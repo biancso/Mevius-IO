@@ -14,7 +14,7 @@ public class MeviusHandler {
 
 	private ArrayList<PacketListener> packetlisteners = new ArrayList<>();
 	private ArrayList<ConnectionListener> connectionlisteners = new ArrayList<>();
-	
+
 	public void registerPacketListener(PacketListener... listener) {
 		for (PacketListener l : listener) {
 			packetlisteners.add(l);
@@ -33,6 +33,8 @@ public class MeviusHandler {
 				if (m.getParameterTypes().length != 1)
 					continue;
 				if (!m.isAnnotationPresent(type.getAnnotation()))
+					continue;
+				if (!((ConnectionHandler) m.getAnnotation(ConnectionHandler.class)).value().equals(type))
 					continue;
 				if (!m.getParameterTypes()[0].equals(MeviusClient.class))
 					continue;
@@ -56,12 +58,15 @@ public class MeviusHandler {
 	public final void callEvent(PacketEvent event) {
 		for (PacketListener listener : packetlisteners) {
 			for (Method m : listener.getClass().getMethods()) {
-				if (!m.isAnnotationPresent(EventMethod.class))
+				if (!m.isAnnotationPresent(PacketHandler.class))
 					continue;
 				if (m.getParameterTypes().length != 1)
 					continue;
 				Class<?> clazz = m.getParameterTypes()[0];
 				if (!clazz.equals(event.getClass()) && !event.getClass().isAssignableFrom(clazz))
+					continue;
+				PacketHandler ph = m.getAnnotation(PacketHandler.class);
+				if (!ph.value().equals(event.getEventType()) && !ph.value().equals(PacketEventType.ALL))
 					continue;
 				try {
 					m.invoke(listener, event);

@@ -1,6 +1,6 @@
 package biancso.mevius.packet.events;
 
 public enum PacketEventType {
-	RECEIVE, SEND;
+	RECEIVE, SEND, ALL;
 
 }

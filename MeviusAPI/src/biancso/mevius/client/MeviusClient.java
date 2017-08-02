@@ -129,11 +129,16 @@ public class MeviusClient extends Thread {
 				e.printStackTrace();
 			}
 			oos.writeObject(responsablePacket);
+			handler.callEvent(MeviusHandler.getPacketEventInstance(responsablePacket, this, PacketEventType.SEND));
 			oos.flush();
 		} else {
 			oos.writeObject(packet);
+			handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.SEND));
 			oos.flush();
 		}
-		handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.SEND));
+	}
+	
+	public MeviusHandler getHandler() {
+		return handler;
 	}
 }
