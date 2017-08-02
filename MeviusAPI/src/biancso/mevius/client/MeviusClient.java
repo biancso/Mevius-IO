@@ -39,7 +39,7 @@ public class MeviusClient extends Thread {
 		oos = new ObjectOutputStream(socket.getOutputStream());
 		oos.flush();
 		ois = new ObjectInputStream(socket.getInputStream());
-		this.handler = new MeviusHandler();
+		this.handler = handler;
 	}
 
 	public void close() throws IOException {
@@ -137,7 +137,7 @@ public class MeviusClient extends Thread {
 			oos.flush();
 		}
 	}
-	
+
 	public MeviusHandler getHandler() {
 		return handler;
 	}
