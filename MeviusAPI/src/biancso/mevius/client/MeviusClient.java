@@ -9,41 +9,37 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.UUID;
 
-import biancso.mevius.connection.ConnectionHandler;
-import biancso.mevius.connection.ConnectionType;
+import biancso.mevius.handler.ConnectionType;
+import biancso.mevius.handler.MeviusHandler;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.MeviusResponsablePacket;
 import biancso.mevius.packet.events.PacketEventType;
-import biancso.mevius.packet.handler.PacketHandler;
 
 public class MeviusClient extends Thread {
 	private final Socket socket;
 	private final UUID uuid;
 	private final ObjectInputStream ois;
 	private final ObjectOutputStream oos;
-	private final PacketHandler ph;
-	private final ConnectionHandler ch;
+	private final MeviusHandler handler;
 
 	// OutputStream flush
-	public MeviusClient(InetAddress addr, int port, PacketHandler ph, ConnectionHandler handler) throws IOException {
+	public MeviusClient(InetAddress addr, int port, MeviusHandler handler) throws IOException {
 		socket = new Socket(addr, port);
 		uuid = UUID.randomUUID();
-		this.ph = ph;
 		oos = new ObjectOutputStream(socket.getOutputStream());
 		oos.flush();
 		ois = new ObjectInputStream(socket.getInputStream());
-		ch = handler;
-		ch.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this);
+		this.handler = new MeviusHandler();
+		this.handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this);
 	}
 
-	public MeviusClient(Socket socket, PacketHandler ph, ConnectionHandler handler) throws IOException {
+	public MeviusClient(Socket socket, MeviusHandler handler) throws IOException {
 		this.socket = socket;
 		uuid = UUID.randomUUID();
-		this.ph = ph;
 		oos = new ObjectOutputStream(socket.getOutputStream());
 		oos.flush();
 		ois = new ObjectInputStream(socket.getInputStream());
-		ch = handler;
+		this.handler = new MeviusHandler();
 	}
 
 	public void close() throws IOException {
@@ -69,7 +65,7 @@ public class MeviusClient extends Thread {
 				if (!(obj instanceof MeviusPacket))
 					continue;
 				MeviusPacket packet = (MeviusPacket) obj;
-				ph.callEvent(PacketHandler.getPacketEventInstance(packet, this, PacketEventType.RECEIVE));
+				handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.RECEIVE));
 			} catch (ClassNotFoundException | IOException e) {
 				try {
 					disconnect();
@@ -84,7 +80,7 @@ public class MeviusClient extends Thread {
 		socket.shutdownInput();
 		socket.shutdownOutput();
 		socket.close();
-		ch.connection(ConnectionType.CLIENT_DISCONNECT_FROM_SERVER, this);
+		handler.connection(ConnectionType.CLIENT_DISCONNECT_FROM_SERVER, this);
 	}
 
 	@Override
@@ -138,6 +134,6 @@ public class MeviusClient extends Thread {
 			oos.writeObject(packet);
 			oos.flush();
 		}
-		ph.callEvent(PacketHandler.getPacketEventInstance(packet, this, PacketEventType.SEND));
+		handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.SEND));
 	}
 }

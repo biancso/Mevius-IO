@@ -5,16 +5,14 @@ import java.net.ServerSocket;
 import java.net.SocketException;
 
 import biancso.mevius.client.MeviusClient;
-import biancso.mevius.connection.ConnectionHandler;
-import biancso.mevius.packet.handler.PacketHandler;
+import biancso.mevius.handler.ConnectionType;
+import biancso.mevius.handler.MeviusHandler;
 import biancso.mevius.server.exceptions.ServerCreateFailException;
 
 public class MeviusServer extends Thread {
 	private final ServerSocket serversocket;
 	private boolean running = false;
-	protected ClientContainer clientcontainer;
-	protected ConnectionHandler connectionhandler;
-	protected PacketHandler ph;
+	protected MeviusHandler handler;
 
 	public MeviusServer(int port) throws ServerCreateFailException {
 		try {
@@ -22,18 +20,16 @@ public class MeviusServer extends Thread {
 		} catch (IOException e) {
 			throw new ServerCreateFailException(e.getMessage());
 		}
-		clientcontainer = new ClientContainer(this);
-		connectionhandler = new ConnectionHandler();
-		ph = new PacketHandler();
+		handler = new MeviusHandler();
 
 	}
 
 	public void run() {
 		while (running && !isInterrupted()) {
 			try {
-				MeviusClient client = new MeviusClient(serversocket.accept(), ph, connectionhandler);
+				MeviusClient client = new MeviusClient(serversocket.accept(), handler);
 				client.start();
-				clientcontainer.clientJoin(client);
+				handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, client);
 			} catch (IOException e) {
 				continue;
 			}
@@ -52,20 +48,8 @@ public class MeviusServer extends Thread {
 		super.interrupt();
 	}
 
-	public ClientContainer getClientContainer() {
-		return this.clientcontainer;
-	}
-
-	public ConnectionHandler getConnectionHandler() {
-		return connectionhandler;
-	}
-
-	public PacketHandler getPacketHandler() {
-		return ph;
-	}
-
-	public void setDefaultPacketHandler(PacketHandler ph) {
-		this.ph = ph;
+	public MeviusHandler getHandler() {
+		return handler;
 	}
 
 	public void setTimeout(int time) {

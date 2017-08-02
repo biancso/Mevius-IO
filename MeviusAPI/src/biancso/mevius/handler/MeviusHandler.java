@@ -1,4 +1,4 @@
-package biancso.mevius.packet.handler;
+package biancso.mevius.handler;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -9,23 +9,52 @@ import biancso.mevius.client.MeviusClient;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.events.PacketEvent;
 import biancso.mevius.packet.events.PacketEventType;
-import biancso.mevius.packet.handler.exceptions.ListenerAlreadyRegisteredException;
 
-public class PacketHandler {
-	private final ArrayList<PacketListener> listeners;
+public class MeviusHandler {
 
-	public PacketHandler() {
-		listeners = new ArrayList<>();
+	private ArrayList<PacketListener> packetlisteners = new ArrayList<>();
+	private ArrayList<ConnectionListener> connectionlisteners = new ArrayList<>();
+
+	public void registerPacketListener(PacketListener... listener) {
+		for (PacketListener l : listener) {
+			packetlisteners.add(l);
+		}
 	}
 
-	public void registerListener(PacketListener listener) throws ListenerAlreadyRegisteredException {
-		if (listeners.contains(listener))
-			throw new ListenerAlreadyRegisteredException(listener.getClass().getName() + " is exist!");
-		listeners.add(listener);
+	public void registerConnectionListener(ConnectionListener... listener) {
+		for (ConnectionListener l : listener) {
+			connectionlisteners.add(l);
+		}
+	}
+
+	public void connection(ConnectionType type, MeviusClient client) {
+		for (ConnectionListener listener : connectionlisteners) {
+			for (Method m : listener.getClass().getMethods()) {
+				if (m.getParameterTypes().length != 1)
+					continue;
+				if (!m.isAnnotationPresent(type.getAnnotation()))
+					continue;
+				if (!m.getParameterTypes()[0].equals(MeviusClient.class))
+					continue;
+				try {
+					m.setAccessible(true);
+					m.invoke(listener, client);
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InvocationTargetException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 	public final void callEvent(PacketEvent event) {
-		for (PacketListener listener : listeners) {
+		for (PacketListener listener : packetlisteners) {
 			for (Method m : listener.getClass().getMethods()) {
 				if (!m.isAnnotationPresent(EventMethod.class))
 					continue;
