@@ -50,4 +50,5 @@ public class MeviusObjectPacket extends MeviusPacket {
 		}
 		throw new PacketUnsupportedException(objSignedData + " is not exist!");
 	}
+
 }
