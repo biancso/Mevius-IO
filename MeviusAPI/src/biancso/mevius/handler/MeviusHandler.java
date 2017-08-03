@@ -63,7 +63,7 @@ public class MeviusHandler {
 				if (m.getParameterTypes().length != 1)
 					continue;
 				Class<?> clazz = m.getParameterTypes()[0];
-				if (!clazz.equals(event.getClass()) && !event.getClass().isAssignableFrom(clazz))
+				if (!clazz.equals(event.getClass()) && !clazz.equals(PacketEvent.class))
 					continue;
 				PacketHandler ph = m.getAnnotation(PacketHandler.class);
 				if (!ph.value().equals(event.getEventType()) && !ph.value().equals(PacketEventType.ALL))

@@ -56,9 +56,11 @@ public class MeviusLogger {
 		public void run() {
 			try {
 				FileWriter fw = new FileWriter(file);
+				StringBuilder sb = new StringBuilder();
 				for (String str : logCollection) {
-					fw.write(str);
+					sb.append(str + "\n");
 				}
+				fw.write(sb.toString());
 				fw.flush();
 				fw.close();
 			} catch (IOException e) {
