@@ -5,28 +5,7 @@
  # MeviusPacket
  We use our own Object-Oriented-Packet, It will helps you to control your packets more easily.
  Texts, Images, even Files! nothing matter!
-
- # 2017-07-28 08:00 KST Updated!
-  From now, you can controll the packet more effectivly!
-  ```java
-  @EventMethod
-  public void yourmethodname(TextPacketEvent e) {
-  System.out.println("New TextPacket has arrive!");
-  System.out.println("data : " + e.getPacket().toString());
-  }
-  ```
-  Just like this,
-  MeviusInputStream and MeviusOutputStream has been deprecated!
   
-  >> To use PacketHandler in MeviusClient
-     Attath PacketHandler to your client
-     
-     PacketHandler ph = new PacketHandler();
-     MeviusClient client = new MeviusClient(InetAddress, port, PacketHandler);
-     client.start();
-     ph.registerListener(PacketListener);
-     
-     
  # MeviusCipher
  > Examples
  >> For AES256
