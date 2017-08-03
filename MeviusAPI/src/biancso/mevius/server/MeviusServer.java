@@ -14,6 +14,7 @@ public class MeviusServer extends Thread {
 	private boolean running = false;
 	protected MeviusHandler handler;
 
+	//MEVIUS ALPHA
 	public MeviusServer(int port) throws ServerCreateFailException {
 		try {
 			this.serversocket = new ServerSocket(port);
