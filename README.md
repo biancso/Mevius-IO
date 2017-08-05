@@ -31,6 +31,16 @@
   // on PacketEventType
   }
   ```
+ # How to send Packet?
+   ```java
+   client.sendPacket(MeviusPacket);
+   ```
+ # How to connect to the server?
+   ```java
+   MeviusClient client = new MeviusClient(InetAddress, PORT(int), new MeviusHandler());
+   client.start();
+   ```
+   
  # How to catch Events?
  ```java
  server.getHandler().registerConnectionListener(ConnectionListener);
