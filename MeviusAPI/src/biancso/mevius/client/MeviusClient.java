@@ -16,19 +16,19 @@ import biancso.mevius.packet.MeviusResponsablePacket;
 import biancso.mevius.packet.events.PacketEventType;
 
 public class MeviusClient extends Thread {
-	private final Socket socket;
-	private final UUID uuid;
-	private final ObjectInputStream ois;
-	private final ObjectOutputStream oos;
-	private final MeviusHandler handler;
+	private final Socket socket; // Socket
+	private final UUID uuid; // UniqueId
+	private final ObjectInputStream ois; // ObjectInputStream for transfer o-o-t packet
+	private final ObjectOutputStream oos; // ObjectOutputStream for transfer o-o-t packet
+	private final MeviusHandler handler; // Handler for control packet and connection events
 
 	public MeviusClient(InetAddress addr, int port, MeviusHandler handler) throws IOException {
-		socket = new Socket(addr, port);
-		uuid = UUID.randomUUID();
-		oos = new ObjectOutputStream(socket.getOutputStream());
+		socket = new Socket(addr, port); // Create new socket for addr:port
+		uuid = UUID.randomUUID(); // Generate new random UniqueId
+		oos = new ObjectOutputStream(socket.getOutputStream()); // Create OutputStream from socket outputStream
 		oos.flush();
-		ois = new ObjectInputStream(socket.getInputStream());
-		this.handler = new MeviusHandler();
+		ois = new ObjectInputStream(socket.getInputStream()); // Create InputStream from socket inputStream
+		this.handler = handler; // Init handler
 		this.handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this);
 	}
 
