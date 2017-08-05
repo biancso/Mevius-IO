@@ -7,6 +7,8 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Base64;
 
 import javax.crypto.BadPaddingException;
@@ -181,20 +183,23 @@ public class MeviusCipher {
 	private void rsaaction(MeviusCipherKey k, Object o) throws InvalidKeyException, IllegalBlockSizeException {
 		try {
 			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
-			KeyPair kp = k.getKey();
 			if (action.getAction() == 0) {
+				PublicKey pk = (k.getKey() instanceof KeyPair) ? ((KeyPair) k.getKey()).getPublic()
+						: (PublicKey) k.getKey();
 				byte[] strb; // need to fix it more comfortable
 				if (o instanceof String) {
 					strb = ((String) o).getBytes();
 				} else {
 					strb = (byte[]) o;
 				}
-				cipher.init(Cipher.ENCRYPT_MODE, kp.getPublic());
+				cipher.init(Cipher.ENCRYPT_MODE, pk);
 				byte[] cf = cipher.doFinal(strb);
 				stringdata = byteArrayToHex(cf);
 				bytedata = cf;
 			} else {
-				cipher.init(Cipher.DECRYPT_MODE, kp.getPrivate());
+				PrivateKey pk = (k.getKey() instanceof KeyPair) ? ((KeyPair) k.getKey()).getPrivate()
+						: ((PrivateKey) k.getKey());
+				cipher.init(Cipher.DECRYPT_MODE, pk);
 				byte[] strb; // need to fix it more comfortable
 				if (o instanceof String) {
 					strb = hexToByteArray(((String) o));
@@ -205,6 +210,7 @@ public class MeviusCipher {
 				stringdata = new String(cf);
 				bytedata = cf;
 			}
+
 		} catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | BadPaddingException e) {
 			e.printStackTrace();
 		}

@@ -58,7 +58,7 @@ public class MeviusCipherKey {
 
 	@SuppressWarnings("unchecked")
 	public <T> T getKey() {
-		return (T) type.getKeyType().cast(key);
+		return (T) key;
 	} // !!!! MeviusCipherType.RSA will return KeyPair
 
 	

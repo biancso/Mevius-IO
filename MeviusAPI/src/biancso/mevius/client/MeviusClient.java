@@ -22,7 +22,6 @@ public class MeviusClient extends Thread {
 	private final ObjectOutputStream oos;
 	private final MeviusHandler handler;
 
-	// OutputStream flush
 	public MeviusClient(InetAddress addr, int port, MeviusHandler handler) throws IOException {
 		socket = new Socket(addr, port);
 		uuid = UUID.randomUUID();
@@ -33,6 +32,7 @@ public class MeviusClient extends Thread {
 		this.handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this);
 	}
 
+	// Constructor for MeviusServer
 	public MeviusClient(Socket socket, MeviusHandler handler) throws IOException {
 		this.socket = socket;
 		uuid = UUID.randomUUID();
