@@ -22,6 +22,9 @@ import biancso.mevius.utils.cipher.exceptions.UnsupportedMeviusKeyException;
 public class MeviusEncryptedPacket extends MeviusPacket{
 	private final SealedObject encryptedobj;
 
+	
+	// USAGE
+	// MeviusEncryptedPacket packet = new MeviusEncryptedPacket(YOUR_AES_MEVIUS_KEY, YOUR_PACKET);
 	public MeviusEncryptedPacket(MeviusCipherKey key, MeviusPacket packet)
 			throws UnsupportedMeviusKeyException, IllegalBlockSizeException, IOException {
 		switch (key.getKeyType().getType()) {

@@ -10,4 +10,6 @@ public enum ConnectionType {
 	public Class<? extends Annotation> getAnnotation() {
 		return this.annotation;
 	}
+	
+	// Enum for Configure connection event type
 }

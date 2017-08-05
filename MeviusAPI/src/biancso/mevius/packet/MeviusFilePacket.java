@@ -9,6 +9,8 @@ import java.nio.file.Files;
 public class MeviusFilePacket extends MeviusPacket {
 	private byte[] filebytearr;
 
+	// USAGE
+	// MeviusFilePacket packet = new MeviusFilePacket(new File("C:\\TESTFILE"));
 	public MeviusFilePacket(File file) throws IOException {
 		filebytearr = Files.readAllBytes(file.toPath());
 	}

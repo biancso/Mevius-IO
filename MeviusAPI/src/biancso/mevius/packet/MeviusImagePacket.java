@@ -12,6 +12,8 @@ public class MeviusImagePacket extends MeviusPacket {
 
 	private final byte[] imageBuffer;
 
+	// USAGE
+	// MeviusImagePacket packet = new MeviusImagePacket(BufferedImage);
 	public MeviusImagePacket(BufferedImage image) throws IOException, ClassNotFoundException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream(image.getHeight() * image.getWidth());
 		ImageIO.setUseCache(false);

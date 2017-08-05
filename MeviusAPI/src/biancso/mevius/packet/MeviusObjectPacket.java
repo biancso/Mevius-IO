@@ -13,6 +13,8 @@ public class MeviusObjectPacket extends MeviusPacket {
 	private final Object obj;
 	private final String objSignedData;
 
+	// USAGE
+	// MeviusObjectPacket packet = new MeviusObjectPacket(YOUR_SERIALIZABLE_OBJECT);
 	public MeviusObjectPacket(Serializable serializable) {
 		obj = serializable;
 		objSignedData = serializable.getClass().getName();

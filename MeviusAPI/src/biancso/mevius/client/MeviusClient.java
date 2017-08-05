@@ -22,6 +22,11 @@ public class MeviusClient extends Thread {
 	private final ObjectOutputStream oos; // ObjectOutputStream for transfer o-o-t packet
 	private final MeviusHandler handler; // Handler for control packet and connection events
 
+	
+	
+	// USAGE
+	// MeviusClient client = new MeviusClient(InetAddress.getByname("localhost") , 3303, new MeviusHandler());
+	// client.start();
 	public MeviusClient(InetAddress addr, int port, MeviusHandler handler) throws IOException {
 		socket = new Socket(addr, port); // Create new socket for addr:port
 		uuid = UUID.randomUUID(); // Generate new random UniqueId
@@ -29,11 +34,11 @@ public class MeviusClient extends Thread {
 		oos.flush();
 		ois = new ObjectInputStream(socket.getInputStream()); // Create InputStream from socket inputStream
 		this.handler = handler; // Init handler
-		this.handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this);
+		this.handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this); // Call ConnectionEvent 
 	}
 
 	// Constructor for MeviusServer
-	public MeviusClient(Socket socket, MeviusHandler handler) throws IOException {
+	public MeviusClient(Socket socket, MeviusHandler handler) throws IOException { // ** WARN ** Not for user
 		this.socket = socket;
 		uuid = UUID.randomUUID();
 		oos = new ObjectOutputStream(socket.getOutputStream());
@@ -43,32 +48,32 @@ public class MeviusClient extends Thread {
 	}
 
 	public void close() throws IOException {
-		this.socket.close();
+		this.socket.close(); // Close
 	}
 
 	public boolean isClosed() {
-		return this.socket.isClosed();
+		return this.socket.isClosed(); // Configure out is socket closed
 	}
 
 	public final Socket getSocket() {
-		return this.socket;
+		return this.socket; // get Socket 
 	}
 
 	public final UUID getUUID() {
-		return this.uuid;
+		return this.uuid; // get UniqueId
 	}
 
 	public void run() {
 		while (!this.isInterrupted()) {
 			try {
-				Object obj = ois.readObject();
+				Object obj = ois.readObject(); // Read Object from ObjectInputStream
 				if (!(obj instanceof MeviusPacket))
-					continue;
-				MeviusPacket packet = (MeviusPacket) obj;
-				handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.RECEIVE));
+					continue; // If Object isn't MeviusPacket, jump to next Object
+				MeviusPacket packet = (MeviusPacket) obj; // VAR PAcket
+				handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.RECEIVE)); // Call Packet Receive Event
 			} catch (ClassNotFoundException | IOException e) {
 				try {
-					disconnect();
+					disconnect(); // Disconnect on error
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
@@ -110,12 +115,12 @@ public class MeviusClient extends Thread {
 
 	public void sendPacket(MeviusPacket packet) throws IOException {
 		if (!packet.isSigned())
-			throw new IllegalStateException(new Throwable("Packet is not signed!"));
-		if (packet instanceof MeviusResponsablePacket) {
-			MeviusResponsablePacket responsablePacket = (MeviusResponsablePacket) packet;
-			Class<? extends MeviusResponsablePacket> packetClass = responsablePacket.getClass();
+			throw new IllegalStateException(new Throwable("Packet is not signed!")); // Check packet's sign data
+		if (packet instanceof MeviusResponsablePacket) { // If ResponsablePacket
+			MeviusResponsablePacket responsablePacket = (MeviusResponsablePacket) packet; // VAR ResponsablePacket
+			Class<? extends MeviusResponsablePacket> packetClass = responsablePacket.getClass(); // get packet class
 			try {
-				Method m = packetClass.getSuperclass().getDeclaredMethod("sent", new Class[] {});
+				Method m = packetClass.getSuperclass().getDeclaredMethod("sent", new Class[] {}); // Invoke method with Reflection
 				m.setAccessible(true);
 				try {
 					m.invoke(responsablePacket);
@@ -128,17 +133,17 @@ public class MeviusClient extends Thread {
 			} catch (SecurityException e) {
 				e.printStackTrace();
 			}
-			oos.writeObject(responsablePacket);
-			handler.callEvent(MeviusHandler.getPacketEventInstance(responsablePacket, this, PacketEventType.SEND));
-			oos.flush();
+			oos.writeObject(responsablePacket); // Send Packet
+			handler.callEvent(MeviusHandler.getPacketEventInstance(responsablePacket, this, PacketEventType.SEND)); // Call Packet Send Event
+			oos.flush(); // Flush
 		} else {
-			oos.writeObject(packet);
-			handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.SEND));
-			oos.flush();
+			oos.writeObject(packet); // send PAcket
+			handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.SEND)); // Call Packet Send Event
+			oos.flush(); // Flush
 		}
 	}
 
 	public MeviusHandler getHandler() {
-		return handler;
+		return handler; // return handler
 	}
 }

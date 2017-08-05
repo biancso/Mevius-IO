@@ -14,7 +14,12 @@ public class MeviusHandler {
 
 	private ArrayList<PacketListener> packetlisteners = new ArrayList<>();
 	private ArrayList<ConnectionListener> connectionlisteners = new ArrayList<>();
-
+	
+	
+	// USAGE
+	// MeviusHandler handler = new MeviusHandler();
+	// handler.register...;
+	
 	public void registerPacketListener(PacketListener... listener) {
 		for (PacketListener l : listener) {
 			packetlisteners.add(l);
