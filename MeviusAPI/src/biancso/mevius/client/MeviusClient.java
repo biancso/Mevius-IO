@@ -83,7 +83,10 @@ implements Closeable {
 	public void connect() throws IOException {
 		if(oos != null) oos.close();
 		if(ois != null) ois.close();
-		if(socket != null) socket.close();
+		
+		if(socket != null)
+			if(!socket.isClosed())
+				socket.close();
 		
 		socket.connect(socket.getRemoteSocketAddress(), timeout);
 		
