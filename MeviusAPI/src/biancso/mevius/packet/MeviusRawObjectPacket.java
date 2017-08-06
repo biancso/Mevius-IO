@@ -2,6 +2,11 @@ package biancso.mevius.packet;
 
 import java.io.Serializable;
 
+import biancso.mevius.client.MeviusClient;
+import biancso.mevius.packet.events.ObjectPacketEvent;
+import biancso.mevius.packet.events.PacketEvent;
+import biancso.mevius.packet.events.PacketEventType;
+
 public class MeviusRawObjectPacket
 extends MeviusPacket {
 
@@ -15,5 +20,10 @@ extends MeviusPacket {
 	
 	public Serializable getData() {
 		return data;
+	}
+
+	@Override
+	public PacketEvent createEvent(MeviusClient client, PacketEventType type) {
+		return new ObjectPacketEvent(this, client, type);
 	}
 }

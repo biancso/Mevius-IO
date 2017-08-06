@@ -6,6 +6,7 @@ import biancso.mevius.client.MeviusClient;
 import biancso.mevius.packet.MeviusPacket;
 
 public abstract class PacketEvent {
+
 	private final MeviusPacket packet;
 	private final boolean isreceived;
 	private final MeviusClient client;

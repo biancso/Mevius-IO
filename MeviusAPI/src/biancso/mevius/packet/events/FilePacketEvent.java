@@ -8,7 +8,6 @@ public class FilePacketEvent extends PacketEvent {
 
 	public FilePacketEvent(MeviusPacket packet, MeviusClient client, PacketEventType receive) {
 		super(packet, client, receive);
-		// TODO Auto-generated constructor stub
 	}
 
 	public MeviusFilePacket getPacket() {
