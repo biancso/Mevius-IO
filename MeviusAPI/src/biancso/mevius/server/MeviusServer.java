@@ -28,7 +28,7 @@ public class MeviusServer extends Thread {
 	public void run() {
 		while (running && !isInterrupted()) {
 			try {
-				MeviusClient client = new MeviusClient(serversocket.accept(), handler);
+				MeviusClient client = new MeviusClient(serversocket.accept(), handler, null, null);
 				client.start();
 				handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, client);
 			} catch (IOException e) {
@@ -54,13 +54,8 @@ public class MeviusServer extends Thread {
 		return handler;
 	}
 
-	public void setTimeout(int time) {
-		try {
-			serversocket.setSoTimeout(time);
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void setTimeout(int time) throws SocketException {
+		serversocket.setSoTimeout(time);
 	}
 
 }

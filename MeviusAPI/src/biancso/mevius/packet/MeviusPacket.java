@@ -77,9 +77,10 @@ public abstract class MeviusPacket implements Serializable {
 		try {
 			return (Class<? extends MeviusPacket>) Class.forName(getSignedData());
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		throw new PacketUnsupportedException(this);
 	}
+	
+	protected void onSend() {}
 }

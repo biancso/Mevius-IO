@@ -59,6 +59,10 @@ public class MeviusHandler {
 			}
 		}
 	}
+	
+	public void exception(Throwable exception) {
+		exception.printStackTrace();
+	}
 
 	public final void callEvent(PacketEvent event) {
 		for (PacketListener listener : packetlisteners) {
@@ -97,4 +101,5 @@ public class MeviusHandler {
 		}
 		throw new RuntimeException("");
 	}
+
 }

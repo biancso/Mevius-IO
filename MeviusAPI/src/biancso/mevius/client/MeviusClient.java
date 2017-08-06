@@ -3,6 +3,7 @@ package biancso.mevius.client;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -12,8 +13,9 @@ import java.util.UUID;
 import biancso.mevius.handler.ConnectionType;
 import biancso.mevius.handler.MeviusHandler;
 import biancso.mevius.packet.MeviusPacket;
-import biancso.mevius.packet.MeviusResponsablePacket;
+import biancso.mevius.packet.MeviusRawObjectPacket;
 import biancso.mevius.packet.events.PacketEventType;
+import biancso.mevius.pipeline.Pipeline;
 
 public class MeviusClient extends Thread {
 	private final Socket socket; // Socket
@@ -21,13 +23,14 @@ public class MeviusClient extends Thread {
 	private final ObjectInputStream ois; // ObjectInputStream for transfer o-o-t packet
 	private final ObjectOutputStream oos; // ObjectOutputStream for transfer o-o-t packet
 	private final MeviusHandler handler; // Handler for control packet and connection events
-
+	private final Pipeline sendPipeline; // The sending pipeline
+	private final Pipeline recievePipeline;
 	
 	
 	// USAGE
 	// MeviusClient client = new MeviusClient(InetAddress.getByname("localhost") , 3303, new MeviusHandler());
 	// client.start();
-	public MeviusClient(InetAddress addr, int port, MeviusHandler handler) throws IOException {
+	public MeviusClient(InetAddress addr, int port, MeviusHandler handler, Pipeline sendPipeline, Pipeline recievePipeline) throws IOException {
 		socket = new Socket(addr, port); // Create new socket for addr:port
 		uuid = UUID.randomUUID(); // Generate new random UniqueId
 		oos = new ObjectOutputStream(socket.getOutputStream()); // Create OutputStream from socket outputStream
@@ -35,16 +38,13 @@ public class MeviusClient extends Thread {
 		ois = new ObjectInputStream(socket.getInputStream()); // Create InputStream from socket inputStream
 		this.handler = handler; // Init handler
 		this.handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this); // Call ConnectionEvent 
+		this.sendPipeline = (sendPipeline != null) ? sendPipeline : Pipeline.DEFAULT_PIPELINE.get();
+		this.recievePipeline = (recievePipeline != null) ? recievePipeline : Pipeline.DEFAULT_PIPELINE.get();
 	}
 
 	// Constructor for MeviusServer
-	public MeviusClient(Socket socket, MeviusHandler handler) throws IOException { // ** WARN ** Not for user
-		this.socket = socket;
-		uuid = UUID.randomUUID();
-		oos = new ObjectOutputStream(socket.getOutputStream());
-		oos.flush();
-		ois = new ObjectInputStream(socket.getInputStream());
-		this.handler = handler;
+	public MeviusClient(Socket socket, MeviusHandler handler, Pipeline sendPipeline, Pipeline recievePipeline) throws IOException { // ** WARN ** Not for user
+		this(socket.getInetAddress(), socket.getPort(), new MeviusHandler(), sendPipeline, recievePipeline);
 	}
 
 	public void close() throws IOException {
@@ -66,7 +66,7 @@ public class MeviusClient extends Thread {
 	public void run() {
 		while (!this.isInterrupted()) {
 			try {
-				Object obj = ois.readObject(); // Read Object from ObjectInputStream
+				Object obj = recievePipeline.process(ois.readObject());
 				if (!(obj instanceof MeviusPacket))
 					continue; // If Object isn't MeviusPacket, jump to next Object
 				MeviusPacket packet = (MeviusPacket) obj; // VAR PAcket
@@ -113,37 +113,33 @@ public class MeviusClient extends Thread {
 		return true;
 	}
 
-	public void sendPacket(MeviusPacket packet) throws IOException {
-		if (!packet.isSigned())
-			throw new IllegalStateException(new Throwable("Packet is not signed!")); // Check packet's sign data
-		if (packet instanceof MeviusResponsablePacket) { // If ResponsablePacket
-			MeviusResponsablePacket responsablePacket = (MeviusResponsablePacket) packet; // VAR ResponsablePacket
-			Class<? extends MeviusResponsablePacket> packetClass = responsablePacket.getClass(); // get packet class
+	public void sendPacket(Serializable packet) throws IOException {
+		if(packet instanceof MeviusPacket) {
 			try {
-				Method m = packetClass.getSuperclass().getDeclaredMethod("sent", new Class[] {}); // Invoke method with Reflection
+				Method m = MeviusPacket.class.getDeclaredMethod("onSend");
 				m.setAccessible(true);
-				try {
-					m.invoke(responsablePacket);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} catch (NoSuchMethodException e) {
-				e.printStackTrace();
-			} catch (SecurityException e) {
+				m.invoke(packet);
+			} catch (InvocationTargetException e) {
+				throw new RuntimeException(e);
+			} catch (ReflectiveOperationException e) {
 				e.printStackTrace();
 			}
-			oos.writeObject(responsablePacket); // Send Packet
-			handler.callEvent(MeviusHandler.getPacketEventInstance(responsablePacket, this, PacketEventType.SEND)); // Call Packet Send Event
-			oos.flush(); // Flush
-		} else {
-			oos.writeObject(packet); // send PAcket
-			handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.SEND)); // Call Packet Send Event
-			oos.flush(); // Flush
+			
+			oos.writeObject(packet);
+			handler.callEvent(MeviusHandler.getPacketEventInstance((MeviusPacket) packet, this, PacketEventType.SEND));
+			oos.flush();
+		}
+		
+		Object toSend = sendPipeline.process(packet);
+		
+		try {
+			sendPacket(new MeviusRawObjectPacket((Serializable)toSend));
+		} catch (ClassCastException e) {
+			throw new RuntimeException("Processed Object not ready for sending (Serialization)", e);
 		}
 	}
 
 	public MeviusHandler getHandler() {
-		return handler; // return handler
+		return handler;
 	}
 }
