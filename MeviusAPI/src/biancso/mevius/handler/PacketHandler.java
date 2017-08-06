@@ -12,5 +12,6 @@ import biancso.mevius.packet.events.PacketEventType;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PacketHandler {
+
 	PacketEventType value();
 }

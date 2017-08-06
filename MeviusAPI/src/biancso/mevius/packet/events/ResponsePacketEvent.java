@@ -8,7 +8,6 @@ public class ResponsePacketEvent extends PacketEvent {
 
 	public ResponsePacketEvent(MeviusPacket packet, MeviusClient client, PacketEventType type) {
 		super(packet, client, type);
-		// TODO Auto-generated constructor stub
 	}
 
 	public MeviusResponsePacket getPacket() {

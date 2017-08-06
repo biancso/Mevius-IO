@@ -7,8 +7,14 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-@SuppressWarnings("serial")
+import biancso.mevius.client.MeviusClient;
+import biancso.mevius.packet.events.ImagePacketEvent;
+import biancso.mevius.packet.events.PacketEvent;
+import biancso.mevius.packet.events.PacketEventType;
+
 public class MeviusImagePacket extends MeviusPacket {
+
+	private static final long serialVersionUID = -2943150285073054863L;
 
 	private final byte[] imageBuffer;
 
@@ -25,5 +31,10 @@ public class MeviusImagePacket extends MeviusPacket {
 
 	public BufferedImage getImage() throws IOException {
 		return ImageIO.read(new ByteArrayInputStream(imageBuffer));
+	}
+
+	@Override
+	public PacketEvent createEvent(MeviusClient client, PacketEventType type) {
+		return new ImagePacketEvent(this, client, type);
 	}
 }

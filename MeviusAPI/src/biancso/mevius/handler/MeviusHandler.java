@@ -1,20 +1,29 @@
 package biancso.mevius.handler;
 
-import java.lang.reflect.Constructor;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import biancso.mevius.client.MeviusClient;
+import biancso.mevius.handler.ramidzkh.ConnectionListener;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.events.PacketEvent;
 import biancso.mevius.packet.events.PacketEventType;
 
+/**
+ * Handles packets incoming from {@link MeviusClient}
+ * 
+ * @author biancso
+ *
+ */
 public class MeviusHandler {
 
-	private ArrayList<PacketListener> packetlisteners = new ArrayList<>();
-	private ArrayList<ConnectionListener> connectionlisteners = new ArrayList<>();
-	
+	private List<PacketListener> packetlisteners = new ArrayList<>();
+	private List<ConnectionListener> connectionlisteners = new ArrayList<>();
+	private List<Object> ramidzkhListeners = new ArrayList<>();
 	
 	// USAGE
 	// MeviusHandler handler = new MeviusHandler();
@@ -24,6 +33,11 @@ public class MeviusHandler {
 		for (PacketListener l : listener) {
 			packetlisteners.add(l);
 		}
+	}
+
+	public void registerListeners(Object... listeners) {
+		for(Object o : listeners)
+			ramidzkhListeners.add(o);
 	}
 
 	public void registerConnectionListener(ConnectionListener... listener) {
@@ -37,7 +51,7 @@ public class MeviusHandler {
 			for (Method m : listener.getClass().getMethods()) {
 				if (m.getParameterTypes().length != 1)
 					continue;
-				if (!m.isAnnotationPresent(type.getAnnotation()))
+				if (!m.isAnnotationPresent(ConnectionHandler.class))
 					continue;
 				if (!((ConnectionHandler) m.getAnnotation(ConnectionHandler.class)).value().equals(type))
 					continue;
@@ -47,17 +61,23 @@ public class MeviusHandler {
 					m.setAccessible(true);
 					m.invoke(listener, client);
 				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					exception(e);
 				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					exception(e);
 				} catch (InvocationTargetException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					exception(e);
 				}
 			}
 		}
+		
+		ramidzkhListeners.forEach(o -> {
+			if(o instanceof ConnectionListener)
+				((ConnectionListener)o).onConnection(type, client);
+		});
+	}
+	
+	public void exception(Throwable exception) {
+		exception.printStackTrace();
 	}
 
 	public final void callEvent(PacketEvent event) {
@@ -76,25 +96,54 @@ public class MeviusHandler {
 				try {
 					m.invoke(listener, event);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					exception(e);
 				}
 			}
 		}
+		
+		ramidzkhListeners.forEach(o -> {
+			Method[] methods = (Method[]) Arrays.<Method>asList(o.getClass().getMethods())
+					.stream()
+					.filter(m -> {
+						Annotation[] as = m.getAnnotations();
+						return Arrays.asList(as).stream().filter(a -> a.getClass() == biancso.mevius.handler.ramidzkh.PacketListener.class).toArray().length > 0;
+					}) // Is annotated with biancso.mevius.handler.ramidzkh.PacketListener
+					.filter(m -> {
+						Class<?>[] argT = m.getParameterTypes();
+						if(argT.length != 1) return false;
+						
+						if(hasSuper(argT[0], event.getClass())) return true;
+						return false;
+					}) // Only one type that extends MeviusPacket
+					.filter(m -> m.getExceptionTypes().length == 0) // No exceptions
+					.toArray();
+			
+			for(Method m : methods) {
+				try {
+					m.invoke(o, event);
+				} catch (InvocationTargetException e) {
+					// Only RuntimeException and Error
+					exception(e);
+				} catch (IllegalAccessException e) {
+					// Impossible
+					exception(e);
+				}
+			}
+		});
+	}
+
+	private static boolean hasSuper(Class<?> clazz, Class<?> checkTo) {
+		if(clazz == checkTo) return true;
+		
+		while(clazz != null) {
+			if((clazz = clazz.getSuperclass()) == checkTo) return true;
+		}
+		
+		return false;
 	}
 
 	public static PacketEvent getPacketEventInstance(MeviusPacket packet, MeviusClient client, PacketEventType type) {
-		try {
-			String eventclassname = "biancso.mevius.packet.events."
-					+ packet.getClass().getSimpleName().replace("Mevius", "") + "Event";
-			Class<?> clazz = Class.forName(eventclassname);
-			Constructor<?> constructor = clazz.getConstructor(MeviusPacket.class, MeviusClient.class,
-					PacketEventType.class);
-			return (PacketEvent) constructor.newInstance(packet, client, type);
-		} catch (NoSuchMethodException | SecurityException | ClassNotFoundException | InstantiationException
-				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			e.printStackTrace();
-		}
-		throw new RuntimeException("");
+		return packet.createEvent(client, type);
 	}
+
 }
