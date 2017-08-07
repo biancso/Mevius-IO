@@ -3,10 +3,8 @@ package biancso.mevius.packet;
 import java.util.Date;
 import java.util.UUID;
 
+@SuppressWarnings("serial")
 public abstract class MeviusResponsablePacket extends MeviusPacket implements Cloneable {
-
-	private static final long serialVersionUID = 2248009244986426819L;
-
 	private final UUID packetUUId;
 	private Date timeout;
 	long time = 10000;
@@ -43,7 +41,8 @@ public abstract class MeviusResponsablePacket extends MeviusPacket implements Cl
 		return timeout.before(new Date());
 	}
 
-	public final void sent() {
+	@SuppressWarnings("unused")
+	private final void sent() {
 		Date date = new Date();
 		date.setTime(date.getTime() + time);
 		timeout = date;

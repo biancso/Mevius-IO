@@ -6,16 +6,10 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import biancso.mevius.client.MeviusClient;
-import biancso.mevius.packet.events.ObjectPacketEvent;
-import biancso.mevius.packet.events.PacketEvent;
-import biancso.mevius.packet.events.PacketEventType;
 import biancso.mevius.server.exceptions.PacketUnsupportedException;
 
+@SuppressWarnings("serial")
 public class MeviusObjectPacket extends MeviusPacket {
-
-	private static final long serialVersionUID = 7496634581155147728L;
-	
 	private final Object obj;
 	private final String objSignedData;
 
@@ -57,11 +51,6 @@ public class MeviusObjectPacket extends MeviusPacket {
 			e.printStackTrace();
 		}
 		throw new PacketUnsupportedException(objSignedData + " is not exist!");
-	}
-
-	@Override
-	public PacketEvent createEvent(MeviusClient client, PacketEventType type) {
-		return new ObjectPacketEvent(this, client, type);
 	}
 
 }

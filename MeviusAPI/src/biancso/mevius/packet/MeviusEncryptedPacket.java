@@ -14,20 +14,15 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.management.RuntimeErrorException;
 
-import biancso.mevius.client.MeviusClient;
-import biancso.mevius.packet.events.EncryptedPacketEvent;
-import biancso.mevius.packet.events.PacketEvent;
-import biancso.mevius.packet.events.PacketEventType;
 import biancso.mevius.packet.exceptions.FailedToDecryptPacketException;
 import biancso.mevius.utils.cipher.MeviusCipherKey;
 import biancso.mevius.utils.cipher.exceptions.UnsupportedMeviusKeyException;
 
-public class MeviusEncryptedPacket extends MeviusPacket {
-
-	private static final long serialVersionUID = 4352461586327191072L;
-	
+@SuppressWarnings("serial")
+public class MeviusEncryptedPacket extends MeviusPacket{
 	private final SealedObject encryptedobj;
 
+	
 	// USAGE
 	// MeviusEncryptedPacket packet = new MeviusEncryptedPacket(YOUR_AES_MEVIUS_KEY, YOUR_PACKET);
 	public MeviusEncryptedPacket(MeviusCipherKey key, MeviusPacket packet)
@@ -93,10 +88,5 @@ public class MeviusEncryptedPacket extends MeviusPacket {
 			e.printStackTrace();
 		}
 		throw new FailedToDecryptPacketException("");
-	}
-
-	@Override
-	public PacketEvent createEvent(MeviusClient client, PacketEventType type) {
-		return new EncryptedPacketEvent(this, client, type);
 	}
 }
