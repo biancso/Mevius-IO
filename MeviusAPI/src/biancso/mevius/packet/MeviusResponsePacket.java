@@ -4,15 +4,8 @@ import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.UUID;
 
-import biancso.mevius.client.MeviusClient;
-import biancso.mevius.packet.events.PacketEvent;
-import biancso.mevius.packet.events.PacketEventType;
-import biancso.mevius.packet.events.RequestPacketEvent;
-
+@SuppressWarnings("serial")
 public class MeviusResponsePacket extends MeviusPacket {
-
-	private static final long serialVersionUID = -7883845014219622263L;
-
 	private final String requestadata;
 	private final String responsedata;
 	private Date timeout;
@@ -21,9 +14,11 @@ public class MeviusResponsePacket extends MeviusPacket {
 	protected MeviusResponsePacket(MeviusRequestPacket mrp, String responsedata) {
 		Field f;
 		try {
-			f = MeviusResponsePacket.class.getDeclaredField("timeout");
+			f = mrp.getClass().getSuperclass().getDeclaredField("timeout");
+			f.setAccessible(true);
 			timeout = (Date) f.get(mrp);
-		} catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException e) {
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		this.uuid = mrp.getUUId();
@@ -45,10 +40,5 @@ public class MeviusResponsePacket extends MeviusPacket {
 
 	public final UUID getUUId() {
 		return this.uuid;
-	}
-
-	@Override
-	public PacketEvent createEvent(MeviusClient client, PacketEventType type) {
-		return new RequestPacketEvent(this, client, type);
 	}
 }

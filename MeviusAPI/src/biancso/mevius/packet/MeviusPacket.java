@@ -2,15 +2,10 @@ package biancso.mevius.packet;
 
 import java.io.Serializable;
 
-import biancso.mevius.client.MeviusClient;
-import biancso.mevius.packet.events.PacketEvent;
-import biancso.mevius.packet.events.PacketEventType;
 import biancso.mevius.server.exceptions.PacketUnsupportedException;
 
+@SuppressWarnings("serial")
 public abstract class MeviusPacket implements Serializable {
-
-	private static final long serialVersionUID = -5761615955867476829L;
-
 	private String classsrc;
 	
 	public MeviusPacket() {
@@ -82,12 +77,9 @@ public abstract class MeviusPacket implements Serializable {
 		try {
 			return (Class<? extends MeviusPacket>) Class.forName(getSignedData());
 		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		throw new PacketUnsupportedException(this);
 	}
-	
-	protected void onSend() {}
-
-	public abstract PacketEvent createEvent(MeviusClient client, PacketEventType type);
 }
