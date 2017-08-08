@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -20,22 +21,21 @@ public class MeviusClient {
 	private final SocketChannel sc;
 	private final MeviusHandler handler; // Handler for control packet and connection events
 	private final UUID uuid;
+	private final boolean self;
 
-	// USAGE
-	// MeviusClient client = new MeviusClient(InetAddress.getByname("localhost") ,
-	// 3303, new MeviusHandler());
-	// client.start();
 	public MeviusClient(InetSocketAddress addr, MeviusHandler handler) throws IOException {
 		this.sc = SocketChannel.open(addr);
 		sc.configureBlocking(false);
 		this.handler = handler;
 		uuid = UUID.randomUUID();
+		self = true;
 	}
 
 	public MeviusClient(SocketChannel channel, MeviusHandler handler) {
 		this.sc = channel;
 		this.handler = handler;
 		uuid = UUID.randomUUID();
+		self = false;
 	}
 
 	public boolean isClosed() {
@@ -48,6 +48,8 @@ public class MeviusClient {
 
 	public void disconnect() throws IOException {
 		sc.close();
+		if (!self)
+			handler.getClientHandler().exit(this);
 		handler.connection(ConnectionType.CLIENT_DISCONNECT_FROM_SERVER, this);
 	}
 
@@ -90,5 +92,9 @@ public class MeviusClient {
 
 	public MeviusHandler getHandler() {
 		return handler; // return handler
+	}
+
+	public InetAddress getInetAddress() {
+		return sc.socket().getInetAddress();
 	}
 }
