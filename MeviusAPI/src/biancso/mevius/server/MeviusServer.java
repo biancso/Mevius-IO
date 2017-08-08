@@ -77,7 +77,7 @@ public class MeviusServer extends Thread {
 			SocketChannel channel = sc.accept();
 			channel.configureBlocking(false);
 			channel.register(selector, SelectionKey.OP_READ);
-			System.out.println(channel.socket().getInetAddress().getHostAddress());
+			handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, new MeviusClient(channel, handler));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
