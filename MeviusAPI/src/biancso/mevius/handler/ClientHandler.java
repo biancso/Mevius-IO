@@ -32,6 +32,8 @@ public class ClientHandler {
 			return false;
 		uuidmap.remove(client.getUUID());
 		ipmap.remove(client.getInetAddress().getHostAddress());
+		if (getPublicKey(client) != null)
+			publickeymap.remove(client);
 		return true;
 	}
 
@@ -42,7 +44,7 @@ public class ClientHandler {
 	public MeviusClient getClient(UUID uuid) {
 		return uuidmap.get(uuid);
 	}
-	
+
 	public PublicKey getPublicKey(MeviusClient client) {
 		return publickeymap.get(client);
 	}

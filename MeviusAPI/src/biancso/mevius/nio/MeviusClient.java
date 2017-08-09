@@ -5,26 +5,30 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.UUID;
 
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SealedObject;
+
 import biancso.mevius.handler.ConnectionType;
 import biancso.mevius.handler.MeviusHandler;
 import biancso.mevius.packet.MeviusPacket;
-import biancso.mevius.packet.MeviusResponsablePacket;
 import biancso.mevius.packet.events.PacketEventType;
-import biancso.mevius.utils.ThreadTimer;
 import biancso.mevius.utils.cipher.MeviusCipherKey;
 
 public class MeviusClient {
@@ -34,30 +38,29 @@ public class MeviusClient {
 	private final UUID uuid;
 	private final boolean self;
 	private EventListener el;
-	private boolean ready = false;
 	private PublicKey publickey;
 	private PrivateKey privatekey;
+	private long timeout = 10000;
 
 	public MeviusClient(InetSocketAddress addr, MeviusHandler handler) throws IOException {
 		this.sc = SocketChannel.open(addr);
 		sc.configureBlocking(false);
 		this.handler = handler;
-		uuid = UUID.randomUUID();
-		self = true;
 		el = new EventListener(sc);
 		el.start();
-		KeyPair kp = MeviusCipherKey.randomRSAKeyPair(512).getKey();
-		ObjectOutputStream oos = new ObjectOutputStream(sc.socket().getOutputStream());
-		oos.flush();
-		oos.writeObject(kp.getPublic());
-		oos.flush();
+		uuid = UUID.randomUUID();
+		self = true;
+		KeyPair kp = MeviusCipherKey.randomRSAKeyPair(1024).getKey();
+		privatekey = kp.getPrivate();
+		sc.write(convert(kp.getPublic()));
+		System.out.println("[C] Public key sent");
 		handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this);
-		new PublicKeyListener().start();
 	}
 
 	public MeviusClient(SocketChannel channel, PublicKey publickey, MeviusHandler handler) {
 		this.sc = channel;
 		this.handler = handler;
+		handler.getClientHandler().join(this);
 		uuid = UUID.randomUUID();
 		self = false;
 		this.publickey = publickey;
@@ -68,11 +71,7 @@ public class MeviusClient {
 	}
 
 	public boolean isReady() {
-		return publickey != null && handler.getClientHandler().getPublicKey(this) != null;
-	}
-
-	protected void setReady(boolean ready) {
-		this.ready = ready;
+		return self ? publickey != null : handler.getClientHandler().getPublicKey(this) != null;
 	}
 
 	protected void setPublicKey(PublicKey publickey) {
@@ -81,6 +80,10 @@ public class MeviusClient {
 
 	public final PublicKey getPublicKey() {
 		return publickey;
+	}
+
+	public final PrivateKey getPrivateKey() {
+		return privatekey;
 	}
 
 	public boolean isClosed() {
@@ -92,48 +95,31 @@ public class MeviusClient {
 	}
 
 	public void disconnect() throws IOException {
-		sc.close();
-		if (!self)
-			handler.getClientHandler().exit(this);
 		if (self && el != null)
 			el.interrupt();
 		sc.close();
+		if (!self)
+			handler.getClientHandler().exit(this);
 		handler.connection(ConnectionType.CLIENT_DISCONNECT_FROM_SERVER, this);
 	}
 
 	public void sendPacket(MeviusPacket packet) throws IOException {
 		if (!packet.isSigned())
-			throw new IllegalStateException(new Throwable("Packet is not signed!")); // Check
-																						// packet's
-																						// sign
-																						// data
-		if (!ready)
+			throw new IllegalStateException(new Throwable("Packet is not signed!"));
+		if (!isReady())
 			throw new IOException("Client is not ready!");
-		if (packet instanceof MeviusResponsablePacket) { // If ResponsablePacket
-			MeviusResponsablePacket responsablePacket = (MeviusResponsablePacket) packet; // VAR
-																							// ResponsablePacket
-			Class<? extends MeviusResponsablePacket> packetClass = responsablePacket.getClass(); // get
-																									// packet
-																									// class
-			try {
-				Method m = packetClass.getSuperclass().getDeclaredMethod("sent", new Class[] {});
-				m.setAccessible(true);
-				try {
-					m.invoke(responsablePacket);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} catch (NoSuchMethodException e) {
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				e.printStackTrace();
-			}
-			sc.write(convert(packet));
-			handler.callEvent(MeviusHandler.getPacketEventInstance(responsablePacket, this, PacketEventType.SEND));
-		} else {
-			sc.write(convert(packet));
+		try {
+			Cipher c = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
+			c.init(Cipher.ENCRYPT_MODE, self ? publickey : handler.getClientHandler().getPublicKey(this));
+			sc.write(convert(new SealedObject(packet, c)));
 			handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.SEND));
+			System.out.println("packet sent");
+		} catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e) {
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -154,28 +140,16 @@ public class MeviusClient {
 		return sc.socket().getInetAddress();
 	}
 
-	class PublicKeyListener extends Thread {
+	public void setConnectionTimeout(int timeout) {
+		this.timeout = timeout * 1000;
+	}
 
-		public PublicKeyListener() {
-			new ThreadTimer(this).setTime(10).start();
-		}
+	public void setConnectionTimeout(long timeout) {
+		this.timeout = timeout;
+	}
 
-		public void run() {
-			while (true) {
-				try {
-					ObjectInputStream ois = new ObjectInputStream(sc.socket().getInputStream());
-					Object obj = ois.readObject();
-					if (!(obj instanceof PublicKey))
-						continue;
-					setPublicKey((PublicKey) obj);
-					ready = true;
-					break;
-				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				}
-			}
-			interrupt();
-		}
+	public long getConnectionTimeout() {
+		return timeout;
 	}
 
 	class EventListener extends Thread {
@@ -184,7 +158,6 @@ public class MeviusClient {
 		public EventListener(SocketChannel channel) throws IOException {
 			selector = Selector.open();
 			channel.register(selector, SelectionKey.OP_READ);
-			channel.register(selector, SelectionKey.OP_WRITE);
 		}
 
 		public void run() {
@@ -199,8 +172,6 @@ public class MeviusClient {
 							continue;
 						if (k.isReadable()) {
 							read(k);
-						} else if (k.isWritable()) {
-							send(k);
 						}
 						continue;
 					}
@@ -211,18 +182,10 @@ public class MeviusClient {
 			}
 		}
 
-		private void send(SelectionKey k) {
-			Object obj = k.attachment();
-			if (!(obj instanceof MeviusPacket))
-				return;
-			SocketChannel channel = (SocketChannel) k.channel();
-			handler.callEvent(MeviusHandler.getPacketEventInstance((MeviusPacket) obj,
-					handler.getClientHandler().getClient(channel.socket().getInetAddress().getHostAddress()),
-					PacketEventType.SEND));
-		}
 
 		private void read(SelectionKey k) {
 			try {
+				System.out.println("ON");
 				SocketChannel channel = (SocketChannel) k.channel();
 				ByteBuffer data = ByteBuffer.allocate(1024);
 				data.clear();
@@ -230,7 +193,13 @@ public class MeviusClient {
 				ByteArrayInputStream bais = new ByteArrayInputStream(data.array());
 				ObjectInputStream ois = new ObjectInputStream(bais);
 				Object obj = ois.readObject();
-				if (!(obj instanceof MeviusPacket))
+				if (!isReady() && !(obj instanceof PublicKey))
+					return;
+				if (obj instanceof PublicKey) {
+					setPublicKey((PublicKey) obj);
+					System.out.println("Public key set");
+				}
+				if (!(obj instanceof SealedObject))
 					return;
 				MeviusPacket packet = (MeviusPacket) obj;
 				handler.callEvent(MeviusHandler.getPacketEventInstance(packet,
@@ -241,4 +210,5 @@ public class MeviusClient {
 			}
 		}
 	}
+
 }
