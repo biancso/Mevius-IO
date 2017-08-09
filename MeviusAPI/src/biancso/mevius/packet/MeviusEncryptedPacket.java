@@ -89,4 +89,8 @@ public class MeviusEncryptedPacket extends MeviusPacket{
 		}
 		throw new FailedToDecryptPacketException("");
 	}
+	
+	public static boolean isPacketEncrypted(MeviusPacket packet) {
+		return packet instanceof MeviusEncryptedPacket;
+	}
 }

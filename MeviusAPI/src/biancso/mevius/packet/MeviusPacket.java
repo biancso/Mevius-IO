@@ -7,7 +7,7 @@ import biancso.mevius.server.exceptions.PacketUnsupportedException;
 @SuppressWarnings("serial")
 public abstract class MeviusPacket implements Serializable {
 	private String classsrc;
-	
+
 	public MeviusPacket() {
 		classsrc = this.getClass().getName();
 	}
@@ -62,14 +62,6 @@ public abstract class MeviusPacket implements Serializable {
 		} catch (ClassNotFoundException e) {
 			return false;
 		}
-	}
-
-	public static boolean isPacketEncrypted(MeviusPacket packet) {
-		return packet instanceof MeviusEncryptedPacket;
-	}
-
-	public boolean isPacketEncrypted() {
-		return this instanceof MeviusEncryptedPacket;
 	}
 
 	@SuppressWarnings("unchecked")
