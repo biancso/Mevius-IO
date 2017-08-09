@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-import biancso.mevius.client.MeviusClient;
+import biancso.mevius.nio.MeviusClient;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.events.PacketEvent;
 import biancso.mevius.packet.events.PacketEventType;

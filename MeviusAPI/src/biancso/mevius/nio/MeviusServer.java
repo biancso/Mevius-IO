@@ -1,4 +1,4 @@
-package biancso.mevius.server;
+package biancso.mevius.nio;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -10,19 +10,22 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Iterator;
 
-import biancso.mevius.client.MeviusClient;
 import biancso.mevius.handler.ConnectionType;
 import biancso.mevius.handler.MeviusHandler;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.events.PacketEventType;
+import biancso.mevius.utils.cipher.MeviusCipherKey;
 
 public class MeviusServer extends Thread {
 	private boolean running = false;
 	private final Selector selector;
 	protected MeviusHandler handler;
 	private final ServerSocketChannel ssc;
+	private final KeyPair keypair;
 
 	// MEVIUS ALPHA
 	public MeviusServer(int port) throws IOException {
@@ -32,6 +35,7 @@ public class MeviusServer extends Thread {
 		ssc.bind(new InetSocketAddress(port));
 		ssc.register(selector, SelectionKey.OP_ACCEPT);
 		handler = new MeviusHandler();
+		keypair = MeviusCipherKey.randomRSAKeyPair(512).getKey();
 	}
 
 	public void run() {
@@ -92,9 +96,10 @@ public class MeviusServer extends Thread {
 			SocketChannel channel = sc.accept();
 			channel.configureBlocking(false);
 			channel.register(selector, SelectionKey.OP_READ);
-			MeviusClient mc = new MeviusClient(channel, handler);
+			MeviusClient mc = new MeviusClient(channel, keypair.getPublic(), handler);
 			handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, mc);
 			handler.getClientHandler().join(mc);
+			new PublicKeyListener(mc).start();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -119,7 +124,8 @@ public class MeviusServer extends Thread {
 		} catch (IOException | ClassNotFoundException e) {
 			if (e.getClass().equals(StreamCorruptedException.class)) {
 				k.cancel();
-				MeviusClient mc = handler.getClientHandler().getClient(((SocketChannel) k.channel()).socket().getInetAddress().getHostAddress());
+				MeviusClient mc = handler.getClientHandler()
+						.getClient(((SocketChannel) k.channel()).socket().getInetAddress().getHostAddress());
 				try {
 					mc.disconnect();
 				} catch (IOException e1) {
@@ -133,4 +139,27 @@ public class MeviusServer extends Thread {
 		}
 	}
 
+	class PublicKeyListener extends Thread {
+		private final MeviusClient client;
+
+		public PublicKeyListener(MeviusClient client) {
+			this.client = client;
+		}
+
+		public void run() {
+			while (true) {
+				try {
+					ObjectInputStream ois = new ObjectInputStream(client.getSocketChannel().socket().getInputStream());
+					Object obj = ois.readObject();
+					if (!(obj instanceof PublicKey))
+						continue;
+					handler.getClientHandler().setPublicKey(client, ((PublicKey) obj));
+					break;
+				} catch (IOException | ClassNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+			interrupt();
+		}
+	}
 }

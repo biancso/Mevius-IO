@@ -1,4 +1,4 @@
-package biancso.mevius.client;
+package biancso.mevius.nio;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.UUID;
 
@@ -28,6 +29,8 @@ public class MeviusClient {
 	private final UUID uuid;
 	private final boolean self;
 	private EventListener el;
+	private boolean ready = false;
+	private PublicKey publickey;
 
 	public MeviusClient(InetSocketAddress addr, MeviusHandler handler) throws IOException {
 		this.sc = SocketChannel.open(addr);
@@ -38,13 +41,35 @@ public class MeviusClient {
 		el = new EventListener(sc);
 		el.start();
 		handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this);
+		new PublicKeyListener().start();
 	}
 
-	public MeviusClient(SocketChannel channel, MeviusHandler handler) {
+	public MeviusClient(SocketChannel channel, PublicKey publickey, MeviusHandler handler) {
 		this.sc = channel;
 		this.handler = handler;
 		uuid = UUID.randomUUID();
 		self = false;
+		this.publickey = publickey;
+	}
+
+	public SocketChannel getSocketChannel() {
+		return sc;
+	}
+
+	public boolean isReady() {
+		return ready;
+	}
+
+	protected void setReady(boolean ready) {
+		this.ready = ready;
+	}
+
+	protected void setPublicKey(PublicKey publickey) {
+		this.publickey = publickey;
+	}
+
+	public final PublicKey getPublicKey() {
+		return publickey;
 	}
 
 	public boolean isClosed() {
@@ -68,6 +93,8 @@ public class MeviusClient {
 	public void sendPacket(MeviusPacket packet) throws IOException {
 		if (!packet.isSigned())
 			throw new IllegalStateException(new Throwable("Packet is not signed!")); // Check packet's sign data
+		if (!ready)
+			throw new IOException("Client is not ready!");
 		if (packet instanceof MeviusResponsablePacket) { // If ResponsablePacket
 			MeviusResponsablePacket responsablePacket = (MeviusResponsablePacket) packet; // VAR ResponsablePacket
 			Class<? extends MeviusResponsablePacket> packetClass = responsablePacket.getClass(); // get packet class
@@ -108,6 +135,25 @@ public class MeviusClient {
 
 	public InetAddress getInetAddress() {
 		return sc.socket().getInetAddress();
+	}
+
+	class PublicKeyListener extends Thread {
+		public void run() {
+			while (true) {
+				try {
+					ObjectInputStream ois = new ObjectInputStream(sc.socket().getInputStream());
+					Object obj = ois.readObject();
+					if (!(obj instanceof PublicKey))
+						continue;
+					setPublicKey((PublicKey) obj);
+					ready = true;
+					break;
+				} catch (IOException | ClassNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+			interrupt();
+		}
 	}
 
 	class EventListener extends Thread {

@@ -2,7 +2,7 @@ package biancso.mevius.packet.events;
 
 import java.util.Date;
 
-import biancso.mevius.client.MeviusClient;
+import biancso.mevius.nio.MeviusClient;
 import biancso.mevius.packet.MeviusPacket;
 
 public abstract class PacketEvent {

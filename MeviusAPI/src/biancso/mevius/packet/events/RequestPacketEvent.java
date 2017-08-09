@@ -1,6 +1,6 @@
 package biancso.mevius.packet.events;
 
-import biancso.mevius.client.MeviusClient;
+import biancso.mevius.nio.MeviusClient;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.MeviusRequestPacket;
 

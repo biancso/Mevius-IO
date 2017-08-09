@@ -1,13 +1,15 @@
 package biancso.mevius.handler;
 
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.UUID;
 
-import biancso.mevius.client.MeviusClient;
+import biancso.mevius.nio.MeviusClient;
 
 public class ClientHandler {
 	private final HashMap<UUID, MeviusClient> uuidmap = new HashMap<>();
 	private final HashMap<String, MeviusClient> ipmap = new HashMap<>();
+	private final HashMap<MeviusClient, PublicKey> publickeymap = new HashMap<>();
 
 	protected ClientHandler() {
 
@@ -32,12 +34,18 @@ public class ClientHandler {
 		ipmap.remove(client.getInetAddress().getHostAddress());
 		return true;
 	}
-	
+
 	public MeviusClient getClient(String host) {
 		return ipmap.get(host);
 	}
-	
+
 	public MeviusClient getClient(UUID uuid) {
 		return uuidmap.get(uuid);
+	}
+
+	public void setPublicKey(MeviusClient client, PublicKey publickey) {
+		if (!isOnline(client.getUUID()))
+			return;
+		publickeymap.put(client, publickey);
 	}
 }
