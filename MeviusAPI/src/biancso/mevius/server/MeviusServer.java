@@ -3,6 +3,7 @@ package biancso.mevius.server;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.StreamCorruptedException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -116,7 +117,19 @@ public class MeviusServer extends Thread {
 					handler.getClientHandler().getClient(channel.socket().getInetAddress().getHostAddress()),
 					PacketEventType.RECEIVE));
 		} catch (IOException | ClassNotFoundException e) {
+			if (e.getClass().equals(StreamCorruptedException.class)) {
+				k.cancel();
+				MeviusClient mc = handler.getClientHandler().getClient(((SocketChannel) k.channel()).socket().getInetAddress().getHostAddress());
+				try {
+					mc.disconnect();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				return;
+			}
 			e.printStackTrace();
+
 		}
 	}
 

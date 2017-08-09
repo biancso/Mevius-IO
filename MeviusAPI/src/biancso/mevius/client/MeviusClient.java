@@ -61,6 +61,7 @@ public class MeviusClient {
 			handler.getClientHandler().exit(this);
 		if (self && el != null)
 			el.interrupt();
+		sc.close();
 		handler.connection(ConnectionType.CLIENT_DISCONNECT_FROM_SERVER, this);
 	}
 
