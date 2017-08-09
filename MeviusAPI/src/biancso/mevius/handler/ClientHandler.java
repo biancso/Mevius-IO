@@ -42,6 +42,10 @@ public class ClientHandler {
 	public MeviusClient getClient(UUID uuid) {
 		return uuidmap.get(uuid);
 	}
+	
+	public PublicKey getPublicKey(MeviusClient client) {
+		return publickeymap.get(client);
+	}
 
 	public void setPublicKey(MeviusClient client, PublicKey publickey) {
 		if (!isOnline(client.getUUID()))

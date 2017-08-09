@@ -18,6 +18,7 @@ import biancso.mevius.handler.ConnectionType;
 import biancso.mevius.handler.MeviusHandler;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.events.PacketEventType;
+import biancso.mevius.utils.ThreadTimer;
 import biancso.mevius.utils.cipher.MeviusCipherKey;
 
 public class MeviusServer extends Thread {
@@ -144,6 +145,7 @@ public class MeviusServer extends Thread {
 
 		public PublicKeyListener(MeviusClient client) {
 			this.client = client;
+			new ThreadTimer(this).setTime(10).start();
 		}
 
 		public void run() {

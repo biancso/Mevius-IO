@@ -13,6 +13,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.UUID;
@@ -22,15 +24,19 @@ import biancso.mevius.handler.MeviusHandler;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.MeviusResponsablePacket;
 import biancso.mevius.packet.events.PacketEventType;
+import biancso.mevius.utils.ThreadTimer;
+import biancso.mevius.utils.cipher.MeviusCipherKey;
 
 public class MeviusClient {
 	private final SocketChannel sc;
-	private final MeviusHandler handler; // Handler for control packet and connection events
+	private final MeviusHandler handler; // Handler for control packet and
+											// connection events
 	private final UUID uuid;
 	private final boolean self;
 	private EventListener el;
 	private boolean ready = false;
 	private PublicKey publickey;
+	private PrivateKey privatekey;
 
 	public MeviusClient(InetSocketAddress addr, MeviusHandler handler) throws IOException {
 		this.sc = SocketChannel.open(addr);
@@ -40,6 +46,11 @@ public class MeviusClient {
 		self = true;
 		el = new EventListener(sc);
 		el.start();
+		KeyPair kp = MeviusCipherKey.randomRSAKeyPair(512).getKey();
+		ObjectOutputStream oos = new ObjectOutputStream(sc.socket().getOutputStream());
+		oos.flush();
+		oos.writeObject(kp.getPublic());
+		oos.flush();
 		handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this);
 		new PublicKeyListener().start();
 	}
@@ -57,7 +68,7 @@ public class MeviusClient {
 	}
 
 	public boolean isReady() {
-		return ready;
+		return publickey != null && handler.getClientHandler().getPublicKey(this) != null;
 	}
 
 	protected void setReady(boolean ready) {
@@ -92,12 +103,18 @@ public class MeviusClient {
 
 	public void sendPacket(MeviusPacket packet) throws IOException {
 		if (!packet.isSigned())
-			throw new IllegalStateException(new Throwable("Packet is not signed!")); // Check packet's sign data
+			throw new IllegalStateException(new Throwable("Packet is not signed!")); // Check
+																						// packet's
+																						// sign
+																						// data
 		if (!ready)
 			throw new IOException("Client is not ready!");
 		if (packet instanceof MeviusResponsablePacket) { // If ResponsablePacket
-			MeviusResponsablePacket responsablePacket = (MeviusResponsablePacket) packet; // VAR ResponsablePacket
-			Class<? extends MeviusResponsablePacket> packetClass = responsablePacket.getClass(); // get packet class
+			MeviusResponsablePacket responsablePacket = (MeviusResponsablePacket) packet; // VAR
+																							// ResponsablePacket
+			Class<? extends MeviusResponsablePacket> packetClass = responsablePacket.getClass(); // get
+																									// packet
+																									// class
 			try {
 				Method m = packetClass.getSuperclass().getDeclaredMethod("sent", new Class[] {});
 				m.setAccessible(true);
@@ -138,6 +155,11 @@ public class MeviusClient {
 	}
 
 	class PublicKeyListener extends Thread {
+
+		public PublicKeyListener() {
+			new ThreadTimer(this).setTime(10).start();
+		}
+
 		public void run() {
 			while (true) {
 				try {
