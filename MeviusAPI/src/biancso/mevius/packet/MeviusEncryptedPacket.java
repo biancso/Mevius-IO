@@ -14,9 +14,9 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.management.RuntimeErrorException;
 
+import biancso.mevius.nio.exceptions.UnsupportedMeviusKeyException;
 import biancso.mevius.packet.exceptions.FailedToDecryptPacketException;
 import biancso.mevius.utils.cipher.MeviusCipherKey;
-import biancso.mevius.utils.cipher.exceptions.UnsupportedMeviusKeyException;
 
 @SuppressWarnings("serial")
 public class MeviusEncryptedPacket extends MeviusPacket{

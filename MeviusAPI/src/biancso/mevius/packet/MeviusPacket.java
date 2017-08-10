@@ -2,7 +2,7 @@ package biancso.mevius.packet;
 
 import java.io.Serializable;
 
-import biancso.mevius.server.exceptions.PacketUnsupportedException;
+import biancso.mevius.nio.exceptions.UnsupportedPacketException;
 
 @SuppressWarnings("serial")
 public abstract class MeviusPacket implements Serializable {
@@ -65,13 +65,13 @@ public abstract class MeviusPacket implements Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	public Class<? extends MeviusPacket> getPacketClass() throws PacketUnsupportedException {
+	public Class<? extends MeviusPacket> getPacketClass() throws UnsupportedPacketException {
 		try {
 			return (Class<? extends MeviusPacket>) Class.forName(getSignedData());
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		throw new PacketUnsupportedException(this);
+		throw new UnsupportedPacketException(this);
 	}
 }

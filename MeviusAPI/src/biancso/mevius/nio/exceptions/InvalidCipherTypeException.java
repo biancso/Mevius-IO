@@ -1,4 +1,4 @@
-package biancso.mevius.utils.cipher.exceptions;
+package biancso.mevius.nio.exceptions;
 
 @SuppressWarnings("serial")
 public class InvalidCipherTypeException extends MeviusCipherException {

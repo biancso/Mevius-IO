@@ -9,7 +9,7 @@ import java.util.Random;
 
 import javax.management.RuntimeErrorException;
 
-import biancso.mevius.utils.cipher.exceptions.UnsupportedMeviusKeyException;
+import biancso.mevius.nio.exceptions.UnsupportedMeviusKeyException;
 
 public class MeviusCipherKey {
 	private Object key;

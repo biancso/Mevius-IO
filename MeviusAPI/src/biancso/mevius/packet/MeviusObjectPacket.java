@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import biancso.mevius.server.exceptions.PacketUnsupportedException;
+import biancso.mevius.nio.exceptions.UnsupportedPacketException;
 
 @SuppressWarnings("serial")
 public class MeviusObjectPacket extends MeviusPacket {
@@ -29,9 +29,9 @@ public class MeviusObjectPacket extends MeviusPacket {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T castTo(Class<?> clazz) throws PacketUnsupportedException {
+	public <T> T castTo(Class<?> clazz) throws UnsupportedPacketException {
 		if (!isOBJSupported())
-			throw new PacketUnsupportedException(objSignedData + " is not exist!");
+			throw new UnsupportedPacketException(objSignedData + " is not exist!");
 		return (T) clazz.cast(obj);
 	}
 
@@ -43,14 +43,14 @@ public class MeviusObjectPacket extends MeviusPacket {
 		}
 	}
 
-	public Class<?> getObjectClass() throws PacketUnsupportedException {
+	public Class<?> getObjectClass() throws UnsupportedPacketException {
 		try {
 			return Class.forName(objSignedData);
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		throw new PacketUnsupportedException(objSignedData + " is not exist!");
+		throw new UnsupportedPacketException(objSignedData + " is not exist!");
 	}
 
 }

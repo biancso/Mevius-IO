@@ -18,10 +18,10 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import biancso.mevius.utils.cipher.exceptions.IllegalMeviusKeyException;
-import biancso.mevius.utils.cipher.exceptions.InvalidCipherTypeException;
-import biancso.mevius.utils.cipher.exceptions.UnsupportedEncryptTargetException;
-import biancso.mevius.utils.cipher.exceptions.UnsupportedMeviusKeyException;
+import biancso.mevius.nio.exceptions.IllegalMeviusKeyException;
+import biancso.mevius.nio.exceptions.InvalidCipherTypeException;
+import biancso.mevius.nio.exceptions.UnsupportedEncryptTargetException;
+import biancso.mevius.nio.exceptions.UnsupportedMeviusKeyException;
 
 public class MeviusCipher {
 	private String stringdata;
