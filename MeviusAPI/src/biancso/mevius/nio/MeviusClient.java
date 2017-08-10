@@ -12,12 +12,21 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Iterator;
 import java.util.UUID;
+
+import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESedeKeySpec;
 
 import biancso.mevius.handler.ConnectionType;
 import biancso.mevius.handler.MeviusHandler;
@@ -112,13 +121,34 @@ public class MeviusClient {
 		}
 	}
 
-	private ByteBuffer convert(Object obj) throws IOException {
+	private ByteBuffer convert(Object obj) throws IOException, MeviusCipherException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
 		oos.flush();
 		oos.writeObject(obj);
 		oos.flush();
 		return ByteBuffer.wrap(baos.toByteArray());
+	}
+
+	private ByteBuffer wrapCipher(byte[] buff) throws MeviusCipherException {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			DESedeKeySpec desKeySpec = new DESedeKeySpec(((String) MeviusCipherKey.randomDESKey().getKey()).getBytes());
+			SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DESede");
+			Key key = keyFactory.generateSecret(desKeySpec);
+			Cipher c = Cipher.getInstance("DESede/ECB/PKCS5Padding");
+			c.init(Cipher.ENCRYPT_MODE, key);
+			CipherOutputStream cos = new CipherOutputStream(baos, c);
+			cos.write(buff);
+			cos.flush();
+			cos.close();
+			return ByteBuffer.wrap(baos.toByteArray());
+		} catch (InvalidKeyException | IOException | NoSuchAlgorithmException | NoSuchPaddingException
+				| InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		throw new MeviusCipherException("Faield to wrap packet");
 	}
 
 	public MeviusHandler getHandler() {
@@ -174,7 +204,7 @@ public class MeviusClient {
 		private void read(SelectionKey k) {
 			try {
 				SocketChannel channel = (SocketChannel) k.channel();
-				ByteBuffer data = ByteBuffer.allocate(1024);
+				ByteBuffer data = ByteBuffer.allocate(10000000);
 				data.clear();
 				channel.read(data);
 				ByteArrayInputStream bais = new ByteArrayInputStream(data.array());
@@ -194,7 +224,7 @@ public class MeviusClient {
 				handler.callEvent(MeviusHandler.getPacketEventInstance(packet,
 						handler.getClientHandler().getClient(channel.socket().getInetAddress().getHostAddress()),
 						PacketEventType.RECEIVE));
-			} catch (IOException | ClassNotFoundException | MeviusCipherException e) {
+			} catch (IOException | ClassNotFoundException e) {
 				e.printStackTrace();
 				if (e.getClass().equals(StreamCorruptedException.class))
 					try {

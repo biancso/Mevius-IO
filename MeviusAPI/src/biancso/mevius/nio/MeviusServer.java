@@ -19,7 +19,6 @@ import java.util.Iterator;
 
 import biancso.mevius.handler.ConnectionType;
 import biancso.mevius.handler.MeviusHandler;
-import biancso.mevius.nio.exceptions.MeviusCipherException;
 import biancso.mevius.packet.MeviusPacket;
 import biancso.mevius.packet.MeviusTransferPacket;
 import biancso.mevius.packet.events.PacketEventType;
@@ -136,7 +135,7 @@ public class MeviusServer extends Thread {
 	private void read(SelectionKey k) {
 		try {
 			SocketChannel channel = (SocketChannel) k.channel();
-			ByteBuffer data = ByteBuffer.allocate(1024);
+			ByteBuffer data = ByteBuffer.allocate(10000000);
 			data.clear();
 			channel.read(data);
 			ByteArrayInputStream bais = new ByteArrayInputStream(data.array());
@@ -169,9 +168,6 @@ public class MeviusServer extends Thread {
 				}
 				return;
 			}
-			e.printStackTrace();
-		} catch (MeviusCipherException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
