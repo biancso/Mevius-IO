@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StreamCorruptedException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -47,7 +48,6 @@ public class MeviusClient {
 		KeyPair kp = MeviusCipherKey.randomRSAKeyPair(2048).getKey();
 		privatekey = kp.getPrivate();
 		sc.write(convert(kp.getPublic()));
-		System.out.println("[C] Public key sent");
 		handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, this);
 	}
 
@@ -106,7 +106,6 @@ public class MeviusClient {
 			sc.write(convert(MeviusTransferPacket
 					.getInstance(self ? publickey : handler.getClientHandler().getPublicKey(this), packet)));
 			handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.SEND));
-			System.out.println("packet sent");
 		} catch (MeviusCipherException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -174,7 +173,6 @@ public class MeviusClient {
 
 		private void read(SelectionKey k) {
 			try {
-				System.out.println("ON");
 				SocketChannel channel = (SocketChannel) k.channel();
 				ByteBuffer data = ByteBuffer.allocate(1024);
 				data.clear();
@@ -186,7 +184,7 @@ public class MeviusClient {
 					return;
 				if (obj instanceof PublicKey) {
 					setPublicKey((PublicKey) obj);
-					System.out.println("Public key set");
+					return;
 				}
 				if (!(obj instanceof MeviusTransferPacket))
 					return;
@@ -198,6 +196,13 @@ public class MeviusClient {
 						PacketEventType.RECEIVE));
 			} catch (IOException | ClassNotFoundException | MeviusCipherException e) {
 				e.printStackTrace();
+				if (e.getClass().equals(StreamCorruptedException.class))
+					try {
+						disconnect();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 			}
 		}
 	}

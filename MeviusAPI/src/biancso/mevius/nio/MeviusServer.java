@@ -116,8 +116,8 @@ public class MeviusServer extends Thread {
 			channel.register(selector, SelectionKey.OP_READ);
 			channel.write(convert(keypair.getPublic()));
 			MeviusClient mc = new MeviusClient(channel, keypair.getPublic(), handler);
+			handler.getClientHandler().join(mc);
 			handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, mc);
-			System.out.println("Public key sent");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -148,12 +148,10 @@ public class MeviusServer extends Thread {
 				handler.getClientHandler().setPublicKey(client, ((PublicKey) obj));
 				return;
 			}
-			if (!client.isReady()) {
-				System.out.println("Client is not ready yet");
-			}
+			if (!client.isReady())
+				return;
 			if (!(obj instanceof MeviusTransferPacket))
 				return;
-			System.out.println("Transfer Packet");
 			MeviusTransferPacket mtp = (MeviusTransferPacket) obj;
 			Key key = mtp.getKey(keypair.getPrivate());
 			MeviusPacket packet = mtp.getPacket(key);
