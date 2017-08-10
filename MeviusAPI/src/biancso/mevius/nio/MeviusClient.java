@@ -11,30 +11,24 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Iterator;
 import java.util.UUID;
 
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SealedObject;
-
 import biancso.mevius.handler.ConnectionType;
 import biancso.mevius.handler.MeviusHandler;
+import biancso.mevius.nio.exceptions.MeviusCipherException;
 import biancso.mevius.packet.MeviusPacket;
+import biancso.mevius.packet.MeviusTransferPacket;
 import biancso.mevius.packet.events.PacketEventType;
 import biancso.mevius.utils.cipher.MeviusCipherKey;
 
 public class MeviusClient {
 	private final SocketChannel sc;
-	private final MeviusHandler handler; // Handler for control packet and
-											// connection events
+	private final MeviusHandler handler;
 	private final UUID uuid;
 	private final boolean self;
 	private EventListener el;
@@ -50,7 +44,7 @@ public class MeviusClient {
 		el.start();
 		uuid = UUID.randomUUID();
 		self = true;
-		KeyPair kp = MeviusCipherKey.randomRSAKeyPair(1024).getKey();
+		KeyPair kp = MeviusCipherKey.randomRSAKeyPair(2048).getKey();
 		privatekey = kp.getPrivate();
 		sc.write(convert(kp.getPublic()));
 		System.out.println("[C] Public key sent");
@@ -109,16 +103,12 @@ public class MeviusClient {
 		if (!isReady())
 			throw new IOException("Client is not ready!");
 		try {
-			Cipher c = Cipher.getInstance("RSA/ECB/PKCS1PADDING", "SunJCE");
-			c.init(Cipher.ENCRYPT_MODE, self ? publickey : handler.getClientHandler().getPublicKey(this));
-			sc.write(convert(new SealedObject(packet, c)));
+			sc.write(convert(MeviusTransferPacket
+					.getInstance(self ? publickey : handler.getClientHandler().getPublicKey(this), packet)));
 			handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.SEND));
 			System.out.println("packet sent");
-		} catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e) {
-			e.printStackTrace();
-		} catch (InvalidKeyException e) {
-			e.printStackTrace();
-		} catch (IllegalBlockSizeException e) {
+		} catch (MeviusCipherException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -182,7 +172,6 @@ public class MeviusClient {
 			}
 		}
 
-
 		private void read(SelectionKey k) {
 			try {
 				System.out.println("ON");
@@ -199,13 +188,15 @@ public class MeviusClient {
 					setPublicKey((PublicKey) obj);
 					System.out.println("Public key set");
 				}
-				if (!(obj instanceof SealedObject))
+				if (!(obj instanceof MeviusTransferPacket))
 					return;
-				MeviusPacket packet = (MeviusPacket) obj;
+				MeviusTransferPacket mtp = (MeviusTransferPacket) obj;
+				Key key = mtp.getKey(getPrivateKey());
+				MeviusPacket packet = mtp.getPacket(key);
 				handler.callEvent(MeviusHandler.getPacketEventInstance(packet,
 						handler.getClientHandler().getClient(channel.socket().getInetAddress().getHostAddress()),
 						PacketEventType.RECEIVE));
-			} catch (IOException | ClassNotFoundException e) {
+			} catch (IOException | ClassNotFoundException | MeviusCipherException e) {
 				e.printStackTrace();
 			}
 		}

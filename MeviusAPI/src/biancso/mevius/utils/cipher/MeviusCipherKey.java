@@ -20,6 +20,23 @@ public class MeviusCipherKey {
 		this.type = type;
 	}
 
+	public static MeviusCipherKey randomDESKey() {
+		String bigChar = "QWERTYUIOPASDFGHJKLZXCVBNM";
+		Random rnd = new Random();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 24; i++) {
+			switch (rnd.nextInt(2) + 1) {
+			case 1:
+				sb.append(bigChar.charAt(rnd.nextInt(bigChar.length())));
+				break;
+			case 2:
+				sb.append(bigChar.toLowerCase().charAt(rnd.nextInt(bigChar.length())));
+				break;
+			}
+		}
+		return new MeviusCipherKey(sb.toString(), MeviusCipherType.DES);
+	}
+
 	public static MeviusCipherKey randomRSAKeyPair(int keysize) {
 		SecureRandom random = new SecureRandom();
 		KeyPairGenerator kpg;
@@ -61,5 +78,4 @@ public class MeviusCipherKey {
 		return (T) key;
 	} // !!!! MeviusCipherType.RSA will return KeyPair
 
-	
 }

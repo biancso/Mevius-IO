@@ -73,6 +73,7 @@ public class MeviusHandler {
 				if (!ph.value().equals(event.getEventType()) && !ph.value().equals(PacketEventType.ALL))
 					continue;
 				try {
+					m.setAccessible(true);
 					m.invoke(listener, event);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 					// TODO Auto-generated catch block

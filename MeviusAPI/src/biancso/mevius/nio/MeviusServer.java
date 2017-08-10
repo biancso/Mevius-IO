@@ -12,17 +12,16 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.Iterator;
 
-import javax.crypto.SealedObject;
-
 import biancso.mevius.handler.ConnectionType;
 import biancso.mevius.handler.MeviusHandler;
+import biancso.mevius.nio.exceptions.MeviusCipherException;
 import biancso.mevius.packet.MeviusPacket;
+import biancso.mevius.packet.MeviusTransferPacket;
 import biancso.mevius.packet.events.PacketEventType;
 import biancso.mevius.utils.cipher.MeviusCipherKey;
 
@@ -42,7 +41,7 @@ public class MeviusServer extends Thread {
 		ssc.bind(new InetSocketAddress(port));
 		ssc.register(selector, SelectionKey.OP_ACCEPT);
 		handler = new MeviusHandler();
-		keypair = MeviusCipherKey.randomRSAKeyPair(1024).getKey();
+		keypair = MeviusCipherKey.randomRSAKeyPair(2048).getKey();
 	}
 
 	public void setConnectionTimeout(int time) {
@@ -147,15 +146,17 @@ public class MeviusServer extends Thread {
 					.getClient(channel.socket().getInetAddress().getHostAddress());
 			if (obj instanceof PublicKey) {
 				handler.getClientHandler().setPublicKey(client, ((PublicKey) obj));
-				System.out.println("Public key set");
 				return;
 			}
-			if (!client.isReady())
+			if (!client.isReady()) {
+				System.out.println("Client is not ready yet");
+			}
+			if (!(obj instanceof MeviusTransferPacket))
 				return;
-			if (!(obj instanceof SealedObject))
-				return;
-			SealedObject so = (SealedObject) obj;
-			MeviusPacket packet = (MeviusPacket) so.getObject(keypair.getPrivate());
+			System.out.println("Transfer Packet");
+			MeviusTransferPacket mtp = (MeviusTransferPacket) obj;
+			Key key = mtp.getKey(keypair.getPrivate());
+			MeviusPacket packet = mtp.getPacket(key);
 			handler.callEvent(MeviusHandler.getPacketEventInstance(packet, client, PacketEventType.RECEIVE));
 		} catch (IOException | ClassNotFoundException e) {
 			if (e.getClass().equals(StreamCorruptedException.class)) {
@@ -171,11 +172,7 @@ public class MeviusServer extends Thread {
 				return;
 			}
 			e.printStackTrace();
-
-		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
+		} catch (MeviusCipherException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
