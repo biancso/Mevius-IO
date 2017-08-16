@@ -14,9 +14,9 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
@@ -48,7 +48,7 @@ public class MeviusTransferPacket implements Serializable {
 			byte[] bobj = convertObj(packet, c);
 			return new MeviusTransferPacket(bkey, bobj);
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException
-				| IOException | InvalidKeySpecException e) {
+				| IOException | InvalidKeySpecException | IllegalBlockSizeException | BadPaddingException e) {
 			e.printStackTrace();
 			throw new MeviusCipherException(e.getLocalizedMessage());
 		}
@@ -65,7 +65,7 @@ public class MeviusTransferPacket implements Serializable {
 			 */
 			return (Key) convertByte(key, c);
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException
-				| ClassNotFoundException | IOException e) {
+				| ClassNotFoundException | IOException | IllegalBlockSizeException | BadPaddingException e) {
 			e.printStackTrace();
 			throw new MeviusCipherException(e.getMessage());
 		}
@@ -77,27 +77,27 @@ public class MeviusTransferPacket implements Serializable {
 			c.init(Cipher.DECRYPT_MODE, key);
 			return (MeviusPacket) convertByte(obj, c);
 		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | ClassNotFoundException
-				| IOException e) {
+				| IOException | IllegalBlockSizeException | BadPaddingException e) {
 			throw new MeviusCipherException(e.getMessage());
 
 		}
 	}
 
-	private static byte[] convertObj(Object obj, Cipher c) throws IOException {
+	private static byte[] convertObj(Object obj, Cipher c)
+			throws IOException, IllegalBlockSizeException, BadPaddingException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		CipherOutputStream cos = new CipherOutputStream(baos, c);
-		ObjectOutputStream oos = new ObjectOutputStream(cos);
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
 		oos.flush();
 		oos.writeObject(obj);
 		oos.flush();
 		oos.close();
-		return baos.toByteArray();
+		return c.doFinal(baos.toByteArray());
 	}
 
-	private static Object convertByte(byte[] buff, Cipher c) throws IOException, ClassNotFoundException {
-		ByteArrayInputStream bais = new ByteArrayInputStream(buff);
-		CipherInputStream cis = new CipherInputStream(bais, c);
-		ObjectInputStream ois = new ObjectInputStream(cis);
+	private static Object convertByte(byte[] buff, Cipher c)
+			throws IOException, ClassNotFoundException, IllegalBlockSizeException, BadPaddingException {
+		ByteArrayInputStream bais = new ByteArrayInputStream(c.doFinal(buff));
+		ObjectInputStream ois = new ObjectInputStream(bais);
 		Object o = ois.readObject();
 		ois.close();
 		return o;
