@@ -98,8 +98,6 @@ public class MeviusClient {
 	public void sendPacket(MeviusPacket packet) throws IOException {
 		if (!packet.isSigned())
 			throw new IllegalStateException(new Throwable("Packet is not signed!"));
-		if (!isReady())
-			throw new IOException("Client is not ready!");
 		try {
 			sc.write(convert(packet));
 			handler.callEvent(MeviusHandler.getPacketEventInstance(packet, this, PacketEventType.SEND));

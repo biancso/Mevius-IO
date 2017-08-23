@@ -132,7 +132,7 @@ public class MeviusServer extends Thread {
 	private void read(SelectionKey k) {
 		try {
 			SocketChannel channel = (SocketChannel) k.channel();
-			ByteBuffer data = ByteBuffer.allocate(10000000);
+			ByteBuffer data = ByteBuffer.allocate(100000);
 			data.clear();
 			channel.read(data);
 			ByteArrayInputStream bais = new ByteArrayInputStream(data.array());
