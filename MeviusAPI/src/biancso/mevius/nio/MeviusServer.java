@@ -12,7 +12,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.security.Key;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Iterator;
@@ -20,7 +19,6 @@ import java.util.Iterator;
 import biancso.mevius.handler.ConnectionType;
 import biancso.mevius.handler.MeviusHandler;
 import biancso.mevius.packet.MeviusPacket;
-import biancso.mevius.packet.MeviusTransferPacket;
 import biancso.mevius.packet.events.PacketEventType;
 import biancso.mevius.utils.cipher.MeviusCipherKey;
 
@@ -40,7 +38,7 @@ public class MeviusServer extends Thread {
 		ssc.bind(new InetSocketAddress(port));
 		ssc.register(selector, SelectionKey.OP_ACCEPT);
 		handler = new MeviusHandler();
-		keypair = MeviusCipherKey.randomRSAKeyPair(2048).getKey();
+		keypair = MeviusCipherKey.randomRSAKeyPair(512).getKey();
 	}
 
 	public void setConnectionTimeout(int time) {
@@ -113,7 +111,6 @@ public class MeviusServer extends Thread {
 			SocketChannel channel = sc.accept();
 			channel.configureBlocking(false);
 			channel.register(selector, SelectionKey.OP_READ);
-			channel.write(convert(keypair.getPublic()));
 			MeviusClient mc = new MeviusClient(channel, keypair.getPublic(), handler);
 			handler.getClientHandler().join(mc);
 			handler.connection(ConnectionType.CLIENT_CONNECT_TO_SERVER, mc);
@@ -145,15 +142,14 @@ public class MeviusServer extends Thread {
 					.getClient(channel.socket().getInetAddress().getHostAddress());
 			if (obj instanceof PublicKey) {
 				handler.getClientHandler().setPublicKey(client, ((PublicKey) obj));
+				channel.write(convert(keypair.getPublic()));
 				return;
 			}
 			if (!client.isReady())
 				return;
-			if (!(obj instanceof MeviusTransferPacket))
+			if (!(obj instanceof MeviusPacket))
 				return;
-			MeviusTransferPacket mtp = (MeviusTransferPacket) obj;
-			Key key = mtp.getKey(keypair.getPrivate());
-			MeviusPacket packet = mtp.getPacket(key);
+			MeviusPacket packet = (MeviusPacket) obj;
 			handler.callEvent(MeviusHandler.getPacketEventInstance(packet, client, PacketEventType.RECEIVE));
 		} catch (IOException | ClassNotFoundException e) {
 			if (e.getClass().equals(StreamCorruptedException.class)) {
