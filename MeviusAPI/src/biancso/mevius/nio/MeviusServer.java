@@ -67,8 +67,6 @@ public class MeviusServer extends Thread {
 						accept(k);
 					} else if (k.isReadable()) {
 						read(k);
-					} else if (k.isWritable()) {
-						send(k);
 					}
 					continue;
 				}
@@ -93,16 +91,6 @@ public class MeviusServer extends Thread {
 
 	public MeviusHandler getHandler() {
 		return handler;
-	}
-
-	private void send(SelectionKey k) {
-		Object obj = k.attachment();
-		if (!(obj instanceof MeviusPacket))
-			return;
-		SocketChannel channel = (SocketChannel) k.channel();
-		handler.callEvent(MeviusHandler.getPacketEventInstance((MeviusPacket) obj,
-				handler.getClientHandler().getClient(channel.socket().getInetAddress().getHostAddress()),
-				PacketEventType.SEND));
 	}
 
 	private void accept(SelectionKey k) {
@@ -145,8 +133,6 @@ public class MeviusServer extends Thread {
 				channel.write(convert(keypair.getPublic()));
 				return;
 			}
-			if (!client.isReady())
-				return;
 			if (!(obj instanceof MeviusPacket))
 				return;
 			MeviusPacket packet = (MeviusPacket) obj;
@@ -164,6 +150,7 @@ public class MeviusServer extends Thread {
 				}
 				return;
 			}
+			k.cancel();
 			e.printStackTrace();
 		}
 	}

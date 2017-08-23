@@ -39,8 +39,7 @@ public class MeviusClient {
 		this.sc = SocketChannel.open(addr);
 		sc.configureBlocking(false);
 		this.handler = handler;
-		el = new EventListener(sc);
-		el.start();
+		(el = new EventListener(sc)).start();
 		uuid = UUID.randomUUID();
 		self = true;
 		KeyPair kp = MeviusCipherKey.randomRSAKeyPair(512).getKey();
@@ -169,11 +168,10 @@ public class MeviusClient {
 		private void read(SelectionKey k) {
 			try {
 				SocketChannel channel = (SocketChannel) k.channel();
-				ByteBuffer data = ByteBuffer.allocate(10000000);
+				ByteBuffer data = ByteBuffer.allocate(100000);
 				data.clear();
 				channel.read(data);
-				ByteArrayInputStream bais = new ByteArrayInputStream(data.array());
-				ObjectInputStream ois = new ObjectInputStream(bais);
+				ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data.array()));
 				Object obj = ois.readObject();
 				if (!isReady() && !(obj instanceof PublicKey))
 					return;
